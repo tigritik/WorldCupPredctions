@@ -43,6 +43,24 @@ export default function GroupStageTable() {
         );
     }
 
+    function buildPredictionPayload() {
+        return {
+            predictions: Object.fromEntries(
+                groups.map((group) => [
+                    group.name,
+                    group.teams.map((team) => team.id),
+                ])
+            ),
+        };
+    }
+
+    function handleSubmitPredictions() {
+        const payload = buildPredictionPayload();
+
+        console.log("Submitting predictions:");
+        console.log(payload);
+    }
+
     return (
         <div style={{ display: "grid", gap: "2rem" }}>
             {groups.map((group) => (
@@ -80,6 +98,21 @@ export default function GroupStageTable() {
                     </DndContext>
                 </div>
             ))}
+            <button
+                onClick={handleSubmitPredictions}
+                style={{
+                    marginTop: 24,
+                    padding: "12px 20px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: "#111827",
+                    color: "white",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                }}
+            >
+                Submit Predictions
+            </button>
         </div>
     );
 }
