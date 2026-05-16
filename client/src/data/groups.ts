@@ -1,49 +1,40 @@
-export type Team = {
-    id: string;
-    name: string;
-    code: string;
-};
-
-export type Group = {
-    name: string;
-    teams: Team[];
-};
+import {type Group} from "@shared/types.ts"
 
 export const groups: Group[] = [
     {
         name: "A",
         teams: [
-            { id: "A-MEX", name: "Mexico", code: "MEX" },
-            { id: "A-KOR", name: "South Korea", code: "KOR" },
-            { id: "A-RSA", name: "South Africa", code: "RSA" },
-            { id: "A-CZE", name: "Czechia", code: "CZE" }
+            { id: "A1", name: "Mexico", code: "MEX" },
+            { id: "A2", name: "South Africa", code: "RSA" },
+            { id: "A3", name: "South Korea", code: "KOR" },
+            { id: "A4", name: "Czechia", code: "CZE" }
         ]
     },
     {
         name: "B",
         teams: [
-            { id: "B-CAN", name: "Canada", code: "CAN" },
-            { id: "B-SUI", name: "Switzerland", code: "SUI" },
-            { id: "B-QAT", name: "Qatar", code: "QAT" },
-            { id: "B-BIH", name: "Bosnia and Herzegovina", code: "BIH" }
+            { id: "B1", name: "Canada", code: "CAN" },
+            { id: "B2", name: "Bosnia and Herzegovina", code: "BIH" },
+            { id: "B3", name: "Qatar", code: "QAT" },
+            { id: "B4", name: "Switzerland", code: "SUI" }
         ]
     },
     {
         name: "C",
         teams: [
-            { id: "C-BRA", name: "Brazil", code: "BRA" },
-            { id: "C-MAR", name: "Morocco", code: "MAR" },
-            { id: "C-SCO", name: "Scotland", code: "SCO" },
-            { id: "C-HAI", name: "Haiti", code: "HAI" }
+            { id: "C1", name: "Brazil", code: "BRA" },
+            { id: "C2", name: "Morocco", code: "MAR" },
+            { id: "C3", name: "Haiti", code: "HAI" },
+            { id: "C4", name: "Scotland", code: "SCO" }
         ]
     },
     {
         name: "D",
         teams: [
-            { id: "D-USA", name: "United States", code: "USA" },
-            { id: "D-AUS", name: "Australia", code: "AUS" },
-            { id: "D-PAR", name: "Paraguay", code: "PAR" },
-            { id: "D-TUR", name: "Türkiye", code: "TUR" }
+            { id: "D1", name: "United States", code: "USA" },
+            { id: "D2", name: "Paraguay", code: "PAR" },
+            { id: "D3", name: "Australia", code: "AUS" },
+            { id: "D4", name: "Türkiye", code: "TUR" }
         ]
     },
     {
@@ -119,6 +110,3 @@ export const groups: Group[] = [
         ]
     }
 ];
-
-export const getFlagUrl = (code: string) =>
-    `https://api.fifa.com/api/v3/picture/flags-sq-2/${code}`;

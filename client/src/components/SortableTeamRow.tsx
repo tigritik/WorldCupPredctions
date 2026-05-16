@@ -1,7 +1,8 @@
 import {useSortable} from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
-import {getFlagUrl, type Team} from "../data/groups.ts";
+import {type Team} from "@shared/types.ts";
+import {getFlagUrl} from "@shared/utils.ts";
 import {useState} from "react";
 
 type TeamRow = {
