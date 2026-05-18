@@ -14,6 +14,19 @@ export type LoadedGroup = {
     teams: Team[];
 }
 
+export type Match = {
+    matchNum: number;
+    group: string;
+    teamIds: [string, string];
+};
+
+export type MatchResult = {
+    matchNum: number;
+    group: string;
+    teams: [Team, Team];
+    score: [number|null, number|null];
+};
+
 export type GroupPredictions = {
     groups: Record<string, string[]>;
     thirdPlaceRanking: string[];
