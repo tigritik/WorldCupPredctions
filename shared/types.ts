@@ -6,5 +6,21 @@ export type Team = {
 
 export type Group = {
     name: string;
-    teams: Team[];
+    teamIds: string[];
 };
+
+export type LoadedGroup = {
+    name: string;
+    teams: Team[];
+}
+
+export type GroupPredictions = Record<string, string[]>;
+
+export type SubmitGroupPredictionRequest = {
+    name: string;
+    predictions: GroupPredictions;
+};
+
+export type SubmitPredictionResponse =
+    | { ok: true }
+    | { ok: false; error: string };
