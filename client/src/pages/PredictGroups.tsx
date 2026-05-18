@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {PointerSensor, useSensor, useSensors, type DragEndEvent} from "@dnd-kit/core";
+import {type DragEndEvent, PointerSensor, useSensor, useSensors} from "@dnd-kit/core";
 import {arrayMove} from "@dnd-kit/sortable";
 import type {GroupPredictions, LoadedGroup, SubmitGroupPredictionRequest} from "@shared/types.ts";
 import {fetchGroups, submitGroupPredictions} from "../api_helpers.ts";
@@ -9,11 +9,21 @@ import {DraggableTable} from "../components/GroupStageTable.tsx";
 export default function PredictGroups() {
     const [groups, setGroups] = useState<LoadedGroup[]>([]);
     const [name, setName] = useState("");
+    const [thirdPlaceRanking, setThirdPlaceRanking] = useState<string[]>([]);
 
     useEffect(() => {
         console.log("fetching groups")
-        fetchGroups().then(groups => setGroups(groups));
+        fetchGroups().then(groups => {
+            setGroups(groups);
+            setThirdPlaceRanking(groups.map(group => group.name));
+        });
     }, []);
+
+    const rankedThirdPlaceTeams = thirdPlaceRanking
+        .map(groupName =>
+            groups.find(g => g.name === groupName)?.teams[2]
+        )
+        .filter(team => team !== undefined);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -41,13 +51,34 @@ export default function PredictGroups() {
         );
     }
 
+    function handleThirdPlaceDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) return;
+
+        // active id and over id are team ids like A2 or B3
+        // we need to extract the group name from the id
+        const groupActiveTeamIsFrom = (active.id as string)[0];
+        const groupOverTeamIsFrom = (over.id as string)[0];
+
+        setThirdPlaceRanking(prev => {
+            const oldIndex = prev.indexOf(groupActiveTeamIsFrom);
+            const newIndex = prev.indexOf(groupOverTeamIsFrom);
+
+            return arrayMove(prev, oldIndex, newIndex);
+        });
+    }
+
     function buildPredictionPayload(): GroupPredictions {
-        return Object.fromEntries(
-            groups.map((group) => [
-                group.name,
-                group.teams.map((team) => team.id),
-            ])
-        );
+        return {
+            groups: Object.fromEntries(
+                groups.map((group) => [
+                    group.name,
+                    group.teams.map((team) => team.id),
+                ])
+            ),
+            thirdPlaceRanking: thirdPlaceRanking
+        };
     }
 
     const navigate = useNavigate();
@@ -87,6 +118,19 @@ export default function PredictGroups() {
                     />
                 </div>
             ))}
+            {thirdPlaceRanking.length > 0 && (
+                <div>
+                    <h2>Third Place Team Rankings</h2>
+                    <DraggableTable
+                        group={{
+                            name: "Third Place",
+                            teams: rankedThirdPlaceTeams,
+                        }}
+                        sensors={sensors}
+                        handleDragEnd={handleThirdPlaceDragEnd}
+                    />
+                </div>
+            )}
             {groups.length > 0 ? <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}

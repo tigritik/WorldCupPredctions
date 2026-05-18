@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {useNavigate, useParams} from "react-router-dom";
 
 import {StaticTable} from "../components/GroupStageTable";
-import type {LoadedGroup} from "@shared/types.ts";
+import type {LoadedGroup, Team} from "@shared/types.ts";
 import {fetchGroupPredictions} from "../api_helpers.ts";
 
 import "./display-predictions.css"
@@ -10,6 +10,7 @@ import "./display-predictions.css"
 export default function DisplayPredictions() {
     const { name } = useParams<{name: string}>();
     const [groups, setGroups] = useState<LoadedGroup[]>([]);
+    const [thirdPlaceTeams, setThirdPlaceTeams] = useState<Team[]>([]);
     
     const navigate = useNavigate();
 
@@ -19,12 +20,13 @@ export default function DisplayPredictions() {
             navigate("/");
             return;
         }
-        fetchGroupPredictions(name).then(groups => {
-            if (!groups || groups.length === 0) {
+        fetchGroupPredictions(name).then(data => {
+            if (!data || data.groups.length === 0) {
                 navigate("/");
                 return;
             }
-            setGroups(groups)
+            setGroups(data.groups);
+            setThirdPlaceTeams(data.thirdPlaceTeams);
         });
     }, [name, navigate]);
 
@@ -46,6 +48,17 @@ export default function DisplayPredictions() {
                     </div>
                 ))}
             </div>
+            {thirdPlaceTeams.length > 0 && (
+                <div style={{ marginTop: "3rem" }}>
+                    <h2>Third Place Team Rankings</h2>
+                    <StaticTable
+                        group={{
+                            name: "Third Place",
+                            teams: thirdPlaceTeams,
+                        }}
+                    />
+                </div>
+            )}
         </div>
     );
 }

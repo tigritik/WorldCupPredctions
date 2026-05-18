@@ -14,7 +14,15 @@ export type LoadedGroup = {
     teams: Team[];
 }
 
-export type GroupPredictions = Record<string, string[]>;
+export type GroupPredictions = {
+    groups: Record<string, string[]>;
+    thirdPlaceRanking: string[];
+};
+
+export type LoadedGroupPredictions = {
+    groups: LoadedGroup[];
+    thirdPlaceTeams: Team[];
+};
 
 export type SubmitGroupPredictionRequest = {
     name: string;

@@ -1,7 +1,7 @@
 import type {
     Group,
     GroupPredictions,
-    LoadedGroup,
+    LoadedGroup, LoadedGroupPredictions,
     SubmitGroupPredictionRequest,
     SubmitPredictionResponse,
     Team
@@ -44,15 +44,15 @@ export async function submitGroupPredictions(payload: SubmitGroupPredictionReque
     return response.json();
 }
 
-export async function fetchGroupPredictions(name: string): Promise<LoadedGroup[]> {
+export async function fetchGroupPredictions(name: string): Promise<LoadedGroupPredictions | null> {
     const response = await fetch(`${endpoint}/predictions/${name}`);
 
-    if (!response.ok) return [];
+    if (!response.ok) return null;
 
     const predictions: GroupPredictions = (await response.json()).predictions;
 
-    return Promise.all(
-        Object.entries(predictions).map(async ([name, teamIds]) => {
+    const loadedGroups: LoadedGroup[] = await Promise.all(
+        Object.entries(predictions.groups).map(async ([name, teamIds]) => {
             const teams = await Promise.all(
                 teamIds.map(teamId => fetchTeam(teamId))
             );
@@ -60,4 +60,24 @@ export async function fetchGroupPredictions(name: string): Promise<LoadedGroup[]
             return {name, teams};
         })
     );
+
+    const groupsByName = new Map(
+        loadedGroups.map(group => [group.name, group])
+    );
+
+    const thirdPlaceTeams = await Promise.all(
+        predictions.thirdPlaceRanking.map(groupName => {
+            const group = groupsByName.get(groupName);
+
+            if (!group) throw new Error(`Missing loaded group: ${groupName}`);
+
+            // return the 3rd place team in that group
+            return group.teams[2];
+        })
+    );
+
+    return {
+        groups: loadedGroups,
+        thirdPlaceTeams: thirdPlaceTeams
+    }
 }
