@@ -27,6 +27,17 @@ export type MatchResult = {
     score: [number|null, number|null];
 };
 
+export type TeamStats = {
+    team: Team;
+    points: number;
+    gf: number;
+    ga: number;
+    gd: number;
+    w: number;
+    d: number;
+    l: number;
+};
+
 export type GroupPredictions = {
     groups: Record<string, string[]>;
     thirdPlaceRanking: string[];
