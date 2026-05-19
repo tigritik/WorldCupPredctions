@@ -1,74 +1,36 @@
 import {closestCenter, DndContext, type DragEndEvent, type SensorDescriptor, type SensorOptions} from "@dnd-kit/core";
 import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
 import SortableTeamRow from "./SortableTeamRow.tsx";
-import type {LoadedGroup, MatchResult, Team, TeamStats} from "@shared/types.ts";
+import type {LoadedGroup, MatchResult} from "@shared/types.ts";
 import StaticTeamRow from "./StaticTeamRow.tsx";
 import { useMemo } from "react";
 import TeamStatsRow from "./TeamStatsRow.tsx";
-import {rankTeams} from "@shared/utils.ts";
+import {rankTeams, buildTable} from "@shared/utils.ts";
 
 export function MatchResultTable({matches}: {matches: MatchResult[]}) {
     const standings = useMemo(() => {
-        const groupMatches = matches
-            .filter(m => m.score[0] != null && m.score[1] != null);
+        // consider only matches that have been played
+        const playedMatches = matches.filter(
+            m => m.score[0] != null && m.score[1] != null
+        );
 
-        const statsMap = new Map<string, TeamStats>();
+        // extract teams from match array (and remove duplicates with map)
+        const teams = Array.from(
+            new Map(
+                matches.flatMap(m =>
+                    m.teams.map(t => [t.id, t])
+                )
+            ).values()
+        );
 
-        const getOrInit = (team: Team) => {
-            if (!statsMap.has(team.id)) {
-                statsMap.set(team.id, {
-                    team,
-                    points: 0,
-                    gf: 0, ga: 0, gd: 0,
-                    w: 0, d: 0, l: 0
-                });
-            }
-            return statsMap.get(team.id)!;
-        };
+        // construct an overall stats table for every match played
+        const table = buildTable(teams, playedMatches);
 
-        // Initialize stats for every team (include those with null matches)
-        matches.forEach(m => {
-            getOrInit(m.teams[0]);
-            getOrInit(m.teams[1]);
-        });
-
-        // Build base stats
-        for (const m of groupMatches) {
-            const [a, b] = m.teams;
-            const [sa, sb] = m.score;
-
-            if (sa === null || sb === null) continue;
-
-            const A = getOrInit(a);
-            const B = getOrInit(b);
-
-            A.gf += sa;
-            A.ga += sb;
-            B.gf += sb;
-            B.ga += sa;
-
-            if (sa > sb) {
-                A.points += 3;
-                A.w++; B.l++;
-            }
-            else if (sb > sa) {
-                B.points += 3;
-                A.l++; B.w++;
-            }
-            else {
-                A.points += 1;
-                B.points += 1;
-                A.d++; B.d++;
-            }
-        }
-
-        for (const s of statsMap.values()) {
-            s.gd = s.gf - s.ga;
-        }
-
-        const all = Array.from(statsMap.values());
-
-        return rankTeams(all, groupMatches);
+        // use helper function to properly order all teams
+        return rankTeams(
+            Array.from(table.values()),
+            playedMatches
+        );
     }, [matches]);
 
     return (
