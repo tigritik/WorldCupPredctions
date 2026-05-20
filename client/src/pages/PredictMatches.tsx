@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import type {MatchResult, SubmitMatchPredictionsRequest} from "@shared/types.ts";
 import {fetchMatches} from "../api_helpers.ts";
 import ScoreInput from "../components/ScoreInput.tsx";
@@ -8,6 +8,8 @@ import "./predict-matches.css";
 export default function PredictMatches() {
     const [matches, setMatches] = useState<MatchResult[]>([]);
     const [name, setName] = useState("");
+    const firstMissingInputRef = useRef<HTMLInputElement | null>(null);
+    const [showValidationErrors, setShowValidationErrors] = useState(false);
 
     useEffect(() => {
         fetchMatches().then(setMatches);
@@ -22,6 +24,26 @@ export default function PredictMatches() {
             return acc;
         }, {});
     }, [matches]);
+
+    const firstMissing = (() => {
+        for (const match of matches) {
+            if (match.score[0] === null) {
+                return {
+                    matchNum: match.matchNum,
+                    teamIndex: 0 as const,
+                };
+            }
+
+            if (match.score[1] === null) {
+                return {
+                    matchNum: match.matchNum,
+                    teamIndex: 1 as const,
+                };
+            }
+        }
+
+        return null;
+    })();
 
     function updateScore(matchNum: number, teamIndex: 0 | 1, value: string) {
         setMatches((prev) =>
@@ -60,6 +82,22 @@ export default function PredictMatches() {
     function handleSubmit() {
         if (!name.trim()) {
             alert("Please enter a name");
+            return;
+        }
+
+        setShowValidationErrors(true);
+        if (firstMissing) {
+            alert("Please enter scores for every match.");
+
+            requestAnimationFrame(() => {
+                firstMissingInputRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                });
+
+                firstMissingInputRef.current?.focus();
+            });
+
             return;
         }
 
@@ -105,7 +143,16 @@ export default function PredictMatches() {
                             <h3>Matches</h3>
 
                             <div className="matches-list">
-                                {groupMatches.map((match) => (
+                                {groupMatches.map((match) => {
+                                    const homeMissing = match.score[0] === null;
+                                    const awayMissing = match.score[1] === null;
+                                    const isFirstMissingHome =
+                                        firstMissing?.matchNum === match.matchNum &&
+                                        firstMissing.teamIndex === 0;
+                                    const isFirstMissingAway =
+                                        firstMissing?.matchNum === match.matchNum &&
+                                        firstMissing.teamIndex === 1;
+                                    return(
                                     <div
                                         key={match.matchNum}
                                         className="match-row"
@@ -120,6 +167,8 @@ export default function PredictMatches() {
                                                     value
                                                 )
                                             }
+                                            showError={showValidationErrors && homeMissing}
+                                            inputRef={isFirstMissingHome ? firstMissingInputRef : undefined}
                                         />
 
                                         <div className="vs">vs</div>
@@ -134,9 +183,11 @@ export default function PredictMatches() {
                                                     value
                                                 )
                                             }
+                                            showError={showValidationErrors && awayMissing}
+                                            inputRef={isFirstMissingAway ? firstMissingInputRef : undefined}
                                         />
                                     </div>
-                                ))}
+                                )})}
                             </div>
                         </div>
 
