@@ -1,7 +1,7 @@
 import type {
     Group,
     GroupPredictions,
-    LoadedGroup, LoadedGroupPredictions,
+    LoadedGroup, LoadedGroupPredictions, Match, MatchResult,
     SubmitGroupPredictionRequest,
     SubmitPredictionResponse,
     Team
@@ -80,4 +80,20 @@ export async function fetchGroupPredictions(name: string): Promise<LoadedGroupPr
         groups: loadedGroups,
         thirdPlaceTeams: thirdPlaceTeams
     }
+}
+
+export async function fetchMatches(): Promise<MatchResult[]> {
+    const response = await fetch(`${endpoint}/matches`);
+
+    const matches: Match[] = await response.json();
+
+    return Promise.all(matches.map(async match => {
+        const [a, b] = match.teamIds;
+        return {
+            matchNum: match.matchNum,
+            group: match.group,
+            teams: [await fetchTeam(a), await fetchTeam(b)],
+            score: [null, null]
+        };
+    }));
 }

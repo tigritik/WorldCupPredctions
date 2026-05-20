@@ -53,6 +53,16 @@ export type SubmitGroupPredictionRequest = {
     predictions: GroupPredictions;
 };
 
+type MatchPrediction = {
+    matchNum: number;
+    score: [number | null, number | null];
+};
+
+export type SubmitMatchPredictionsRequest = {
+    name: string;
+    predictions: MatchPrediction[];
+};
+
 export type SubmitPredictionResponse =
     | { ok: true }
     | { ok: false; error: string };

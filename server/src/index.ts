@@ -4,6 +4,7 @@ import {teams} from "./data/teams";
 import {predictionsStore} from "./data/predictions";
 import {SubmitGroupPredictionRequest} from "@shared/types";
 import cors from "cors";
+import {matches} from "./data/matches";
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -61,6 +62,10 @@ app.get("/predictions/:name", (req: Request<{name: string}>, res: Response) => {
         name: req.params.name,
         predictions: prediction,
     });
+});
+
+app.get("/matches", (_: Request, res: Response) => {
+    res.json(matches);
 });
 
 // Start Server
