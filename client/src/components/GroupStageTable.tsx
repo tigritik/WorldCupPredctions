@@ -1,13 +1,20 @@
 import {closestCenter, DndContext, type DragEndEvent, type SensorDescriptor, type SensorOptions} from "@dnd-kit/core";
 import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
 import SortableTeamRow from "./SortableTeamRow.tsx";
-import type {LoadedGroup, MatchResult} from "@shared/types.ts";
+import type {LoadedGroup, MatchResult, Team} from "@shared/types.ts";
 import StaticTeamRow from "./StaticTeamRow.tsx";
 import { useMemo } from "react";
 import TeamStatsRow from "./TeamStatsRow.tsx";
 import {rankTeams, buildTable} from "@shared/utils.ts";
 
-export function MatchResultTable({matches}: {matches: MatchResult[]}) {
+type MatchResultTableProps = {
+    matches: MatchResult[];
+    teams?: Team[]; // optionally specify teams
+};
+
+export function MatchResultTable(props: MatchResultTableProps) {
+    const matches = props.matches;
+
     const standings = useMemo(() => {
         // consider only matches that have been played
         const playedMatches = matches.filter(
@@ -15,7 +22,7 @@ export function MatchResultTable({matches}: {matches: MatchResult[]}) {
         );
 
         // extract teams from match array (and remove duplicates with map)
-        const teams = Array.from(
+        const teams = props.teams || Array.from(
             new Map(
                 matches.flatMap(m =>
                     m.teams.map(t => [t.id, t])
@@ -25,13 +32,14 @@ export function MatchResultTable({matches}: {matches: MatchResult[]}) {
 
         // construct an overall stats table for every match played
         const table = buildTable(teams, playedMatches);
+        if (props.teams) console.log(table);
 
         // use helper function to properly order all teams
         return rankTeams(
             Array.from(table.values()),
             playedMatches
         );
-    }, [matches]);
+    }, [matches, props.teams]);
 
     return (
         <table border={1} cellPadding={8}>

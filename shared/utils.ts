@@ -15,31 +15,41 @@ function createStats(team: Team): TeamStats {
 }
 
 // update team stats with a given match score
-function updateStats(A: TeamStats, B: TeamStats, sa: number, sb: number) {
-    A.gf += sa;
-    A.ga += sb;
-    A.gd += (sa - sb);
+function updateStats(A: TeamStats|undefined, B: TeamStats|undefined, sa: number, sb: number) {
+    if (A) {
+        A.gf += sa;
+        A.ga += sb;
+        A.gd += (sa - sb);
 
-    B.gf += sb;
-    B.ga += sa;
-    B.gd += (sb - sa);
-
-    if (sa > sb) {
-        A.points += 3;
-        A.w++;
-        B.l++;
+        if (sa > sb) {
+            A.points += 3;
+            A.w++;
+        }
+        else if (sb > sa) {
+            A.l++;
+        }
+        else {
+            A.points++;
+            A.d++;
+        }
     }
-    else if (sb > sa) {
-        B.points += 3;
-        B.w++;
-        A.l++;
-    }
-    else {
-        A.points++;
-        B.points++;
 
-        A.d++;
-        B.d++;
+    if (B) {
+        B.gf += sb;
+        B.ga += sa;
+        B.gd += (sb - sa);
+
+        if (sb > sa) {
+            B.points += 3;
+            B.w++;
+        }
+        else if (sa > sb) {
+            B.l++;
+        }
+        else {
+            B.points++;
+            B.d++;
+        }
     }
 }
 
@@ -60,8 +70,6 @@ export function buildTable(teams: Team[], matches: MatchResult[]): Map<string, T
 
         const A = map.get(a.id);
         const B = map.get(b.id);
-
-        if (!A || !B) continue;
 
         updateStats(A, B, sa, sb);
     }

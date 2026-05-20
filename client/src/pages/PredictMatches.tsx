@@ -4,6 +4,7 @@ import {fetchMatches} from "../api_helpers.ts";
 import ScoreInput from "../components/ScoreInput.tsx";
 import {MatchResultTable} from "../components/GroupStageTable.tsx";
 import "./predict-matches.css";
+import {buildTable, rankTeams} from "@shared/utils.ts";
 
 export default function PredictMatches() {
     const [matches, setMatches] = useState<MatchResult[]>([]);
@@ -199,6 +200,35 @@ export default function PredictMatches() {
                     </div>
                 </section>
             ))}
+
+            <section className="group-section">
+                <div className="table-card">
+                    <h3>Third Place Ranking</h3>
+
+                    <MatchResultTable
+                        matches={matches}
+                        teams={Object.keys(groupedMatches).map(groupName => {
+                            // code borrowed from the Group Table
+                            const playedMatches = matches.filter(
+                                m => m.score[0] != null && m.score[1] != null
+                            );
+
+                            const teams = Array.from(
+                                new Map(
+                                    matches
+                                        .filter(result => result.group === groupName)
+                                        .flatMap(m => m.teams.map(t => [t.id, t]))
+                                ).values()
+                            );
+
+                            const table = buildTable(teams, playedMatches);
+
+                            // extract the 3rd place team from the group
+                            return rankTeams(Array.from(table.values()), playedMatches)[2].team;
+                        })}
+                    />
+                </div>
+            </section>
         </div>
     );
 }
