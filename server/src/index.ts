@@ -1,8 +1,8 @@
 import express, { Request, Response, Application } from 'express';
 import {groups} from "./data/groups";
 import {teams} from "./data/teams";
-import {predictionsStore} from "./data/predictions";
-import {SubmitGroupPredictionRequest} from "@shared/types";
+import {groupPredictionsStore, matchPredictionsStore} from "./data/predictions";
+import {SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest} from "@shared/types";
 import cors from "cors";
 import {matches} from "./data/matches";
 
@@ -32,25 +32,25 @@ app.get("/teams/:id", (req: Request<{id: string}>, res: Response) => {
     res.json(team);
 });
 
-app.post("/predictions", (req: Request, res: Response) => {
+app.post("/group-predictions", (req: Request, res: Response) => {
     const body = req.body as SubmitGroupPredictionRequest;
 
-    if (predictionsStore[body.name]) {
+    if (groupPredictionsStore[body.name]) {
         return res.json({
             ok: false,
             error: "Name already exists",
         });
     }
 
-    predictionsStore[body.name] = body.predictions;
+    groupPredictionsStore[body.name] = body.predictions;
 
     return res.json({
         ok: true,
     });
 });
 
-app.get("/predictions/:name", (req: Request<{name: string}>, res: Response) => {
-    const prediction = predictionsStore[req.params.name];
+app.get("/group-predictions/:name", (req: Request<{name: string}>, res: Response) => {
+    const prediction = groupPredictionsStore[req.params.name];
 
     if (!prediction) {
         return res.status(404).json({
@@ -66,6 +66,38 @@ app.get("/predictions/:name", (req: Request<{name: string}>, res: Response) => {
 
 app.get("/matches", (_: Request, res: Response) => {
     res.json(matches);
+});
+
+app.post("/match-predictions", (req: Request, res: Response) => {
+    const body = req.body as SubmitMatchPredictionsRequest;
+
+    if (matchPredictionsStore[body.name]) {
+        return res.json({
+            ok: false,
+            error: "Name already exists",
+        });
+    }
+
+    matchPredictionsStore[body.name] = body.predictions;
+
+    return res.json({
+        ok: true,
+    });
+});
+
+app.get("/match-predictions/:name", (req: Request<{name: string}>, res: Response) => {
+    const prediction = matchPredictionsStore[req.params.name];
+
+    if (!prediction) {
+        return res.status(404).json({
+            error: "Prediction not found",
+        });
+    }
+
+    res.json({
+        name: req.params.name,
+        predictions: prediction,
+    });
 });
 
 // Start Server

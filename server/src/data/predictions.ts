@@ -1,3 +1,4 @@
-import {GroupPredictions} from "@shared/types";
+import {GroupPredictions, MatchPrediction} from "@shared/types";
 
-export const predictionsStore: Record<string, GroupPredictions> = {};
+export const groupPredictionsStore: Record<string, GroupPredictions> = {};
+export const matchPredictionsStore: Record<string, MatchPrediction[]> = {};

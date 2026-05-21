@@ -53,7 +53,7 @@ export type SubmitGroupPredictionRequest = {
     predictions: GroupPredictions;
 };
 
-type MatchPrediction = {
+export type MatchPrediction = {
     matchNum: number;
     score: [number | null, number | null];
 };

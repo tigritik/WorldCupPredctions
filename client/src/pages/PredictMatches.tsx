@@ -1,10 +1,11 @@
 import {useEffect, useMemo, useRef, useState} from "react";
 import type {MatchResult, SubmitMatchPredictionsRequest} from "@shared/types.ts";
-import {fetchMatches} from "../api_helpers.ts";
+import {fetchMatches, submitMatchPredictions} from "../api_helpers.ts";
 import ScoreInput from "../components/ScoreInput.tsx";
 import {MatchResultTable} from "../components/GroupStageTable.tsx";
 import "./predict-matches.css";
 import {buildTable, rankTeams} from "@shared/utils.ts";
+import {useNavigate} from "react-router-dom";
 
 export default function PredictMatches() {
     const [matches, setMatches] = useState<MatchResult[]>([]);
@@ -80,7 +81,9 @@ export default function PredictMatches() {
         };
     }
 
-    function handleSubmit() {
+    const navigate = useNavigate();
+
+    async function handleSubmit() {
         if (!name.trim()) {
             alert("Please enter a name");
             return;
@@ -107,7 +110,13 @@ export default function PredictMatches() {
         console.log("Submitting match predictions:");
         console.log(payload);
 
-        alert("Prediction schema printed to console");
+        const result = await submitMatchPredictions(payload);
+
+        if (result.ok) {
+            navigate(`/predictions/${name}`);
+        } else {
+            alert(result.error);
+        }
     }
 
     return (

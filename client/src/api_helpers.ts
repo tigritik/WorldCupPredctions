@@ -1,8 +1,8 @@
 import type {
     Group,
     GroupPredictions,
-    LoadedGroup, LoadedGroupPredictions, Match, MatchResult,
-    SubmitGroupPredictionRequest,
+    LoadedGroup, LoadedGroupPredictions, Match, MatchPrediction, MatchResult,
+    SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest,
     SubmitPredictionResponse,
     Team
 } from "@shared/types.ts";
@@ -33,7 +33,7 @@ export async function fetchTeam(id: string): Promise<Team> {
 }
 
 export async function submitGroupPredictions(payload: SubmitGroupPredictionRequest): Promise<SubmitPredictionResponse> {
-    const response = await fetch(`${endpoint}/predictions`, {
+    const response = await fetch(`${endpoint}/group-predictions`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export async function submitGroupPredictions(payload: SubmitGroupPredictionReque
 }
 
 export async function fetchGroupPredictions(name: string): Promise<LoadedGroupPredictions | null> {
-    const response = await fetch(`${endpoint}/predictions/${name}`);
+    const response = await fetch(`${endpoint}/group-predictions/${name}`);
 
     if (!response.ok) return null;
 
@@ -96,4 +96,43 @@ export async function fetchMatches(): Promise<MatchResult[]> {
             score: [null, null]
         };
     }));
+}
+
+export async function submitMatchPredictions(payload: SubmitMatchPredictionsRequest): Promise<SubmitPredictionResponse> {
+    const response = await fetch(`${endpoint}/match-predictions`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    return response.json();
+}
+
+export async function fetchMatchPredictions(name: string): Promise<MatchResult[] | null> {
+    const response = await fetch(`${endpoint}/match-predictions/${name}`);
+
+    if (!response.ok) return null;
+
+    const predictions: MatchPrediction[] = (await response.json()).predictions;
+    const matches = await fetchMatches();
+
+    // map match number to match object for fast lookup
+    const matchMap = new Map<number, MatchResult>(
+        matches.map(match => [match.matchNum, match])
+    );
+
+    return predictions.map(p => {
+        const match = matchMap.get(p.matchNum);
+
+        if (!match) throw new Error(`Predictions missing match ${p.matchNum}`);
+
+        return {
+            matchNum: p.matchNum,
+            group: match.group,
+            teams: match.teams,
+            score: p.score
+        }
+    });
 }

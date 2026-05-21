@@ -32,7 +32,6 @@ export function MatchResultTable(props: MatchResultTableProps) {
 
         // construct an overall stats table for every match played
         const table = buildTable(teams, playedMatches);
-        if (props.teams) console.log(table);
 
         // use helper function to properly order all teams
         return rankTeams(
