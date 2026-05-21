@@ -65,5 +65,13 @@
 .flag {
     width: 35px;
     height: 23px;
-    /*border-radius: 999px;*/
+    border-radius: 4px;
+}
+
+.predicted-matches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+    margin-bottom: 32px;
 }

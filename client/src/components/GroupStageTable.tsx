@@ -7,6 +7,38 @@ import { useMemo } from "react";
 import TeamStatsRow from "./TeamStatsRow.tsx";
 import {rankTeams, buildTable} from "@shared/utils.ts";
 
+export function ThirdPlaceTableFromMatches({matches}: {matches: MatchResult[]}) {
+    const groupedMatches = matches.reduce<Record<string, MatchResult[]>>((acc, match) => {
+        if (!acc[match.group]) acc[match.group] = [];
+
+        acc[match.group].push(match);
+
+        return acc;
+    }, {});
+
+    const teams = Object.keys(groupedMatches).map(groupName => {
+            // code borrowed from the Group Table
+            const playedMatches = matches.filter(
+                m => m.score[0] != null && m.score[1] != null
+            );
+
+            const teams = Array.from(
+                new Map(
+                    matches
+                        .filter(result => result.group === groupName)
+                        .flatMap(m => m.teams.map(t => [t.id, t]))
+                ).values()
+            );
+
+            const table = buildTable(teams, playedMatches);
+
+            // extract the 3rd place team from the group
+            return rankTeams(Array.from(table.values()), playedMatches)[2].team;
+        });
+
+    return <MatchResultTable matches={matches} teams={teams} />
+}
+
 type MatchResultTableProps = {
     matches: MatchResult[];
     teams?: Team[]; // optionally specify teams
