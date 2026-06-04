@@ -7,24 +7,26 @@ import "./display-predictions.css";
 import PredictedMatchCard from "../components/PredictedMatchCard.tsx";
 
 export default function DisplayMatchPredictions() {
-    const { name } = useParams<{name: string}>();
+    const { id } = useParams<{id: string}>();
+    const [name, setName] = useState("");
     const [predictedMatches, setPredictedMatches] = useState<MatchResult[]>([]);
     const navigate = useNavigate();
 
     useEffect(() => {
         console.log("fetching matches")
-        if (!name) {
+        if (!id) {
             navigate("/");
             return;
         }
-        fetchMatchPredictions(name).then(data => {
-            if (!data || data.length === 0) {
+        fetchMatchPredictions(id).then(({name, data}) => {
+            if (!data || data.length === 0 || !name) {
                 navigate("/");
                 return;
             }
+            setName(name);
             setPredictedMatches(data);
         });
-    }, [name, navigate]);
+    }, [id, navigate]);
 
     const groupedMatches = predictedMatches.reduce<Record<string, MatchResult[]>>((acc, match) => {
         if (!acc[match.group]) acc[match.group] = [];
@@ -37,7 +39,7 @@ export default function DisplayMatchPredictions() {
     return (
         <div className="prediction-page">
             <div className="prediction-header">
-                <h1>{name}'s Match Predictions</h1>
+                {name && <h1>{name}'s Match Predictions</h1>}
             </div>
 
             {Object.entries(groupedMatches).map(([groupName, groupMatches]) => (

@@ -1,7 +1,9 @@
 import type {
+    FetchGroupPredictionResponse,
+    FetchMatchPredictionResponse,
     Group,
     GroupPredictions,
-    LoadedGroup, LoadedGroupPredictions, Match, MatchPrediction, MatchResult,
+    LoadedGroup, Match, MatchPrediction, MatchResult,
     SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest,
     SubmitPredictionResponse,
     Team
@@ -44,12 +46,14 @@ export async function submitGroupPredictions(payload: SubmitGroupPredictionReque
     return response.json();
 }
 
-export async function fetchGroupPredictions(name: string): Promise<LoadedGroupPredictions | null> {
-    const response = await fetch(`${endpoint}/group-predictions/${name}`);
+export async function fetchGroupPredictions(id: string): Promise<FetchGroupPredictionResponse> {
+    const response = await fetch(`${endpoint}/group-predictions/${id}`);
 
-    if (!response.ok) return null;
+    if (!response.ok) return {name: null, data: null};
 
-    const predictions: GroupPredictions = (await response.json()).predictions;
+    const json = await response.json();
+    const name = json.name;
+    const predictions: GroupPredictions = json.predictions;
 
     const loadedGroups: LoadedGroup[] = await Promise.all(
         Object.entries(predictions.groups).map(async ([name, teamIds]) => {
@@ -77,9 +81,12 @@ export async function fetchGroupPredictions(name: string): Promise<LoadedGroupPr
     );
 
     return {
-        groups: loadedGroups,
-        thirdPlaceTeams: thirdPlaceTeams
-    }
+        name,
+        data: {
+            groups: loadedGroups,
+            thirdPlaceTeams: thirdPlaceTeams
+        }
+    };
 }
 
 export async function fetchMatches(): Promise<MatchResult[]> {
@@ -110,12 +117,14 @@ export async function submitMatchPredictions(payload: SubmitMatchPredictionsRequ
     return response.json();
 }
 
-export async function fetchMatchPredictions(name: string): Promise<MatchResult[] | null> {
-    const response = await fetch(`${endpoint}/match-predictions/${name}`);
+export async function fetchMatchPredictions(id: string): Promise<FetchMatchPredictionResponse> {
+    const response = await fetch(`${endpoint}/match-predictions/${id}`);
 
-    if (!response.ok) return null;
+    if (!response.ok) return {name: null, data: null};
 
-    const predictions: MatchPrediction[] = (await response.json()).predictions;
+    const json = await response.json();
+    const name: string = json.name;
+    const predictions: MatchPrediction[] = json.predictions;
     const matches = await fetchMatches();
 
     // map match number to match object for fast lookup
@@ -123,16 +132,19 @@ export async function fetchMatchPredictions(name: string): Promise<MatchResult[]
         matches.map(match => [match.matchNum, match])
     );
 
-    return predictions.map(p => {
-        const match = matchMap.get(p.matchNum);
+    return {
+        name,
+        data: predictions.map(p => {
+            const match = matchMap.get(p.matchNum);
 
-        if (!match) throw new Error(`Predictions missing match ${p.matchNum}`);
+            if (!match) throw new Error(`Predictions missing match ${p.matchNum}`);
 
-        return {
-            matchNum: p.matchNum,
-            group: match.group,
-            teams: match.teams,
-            score: p.score
-        }
-    });
+            return {
+                matchNum: p.matchNum,
+                group: match.group,
+                teams: match.teams,
+                score: p.score
+            }
+        })
+    };
 }

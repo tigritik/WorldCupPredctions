@@ -12,11 +12,11 @@ function App() {
               <Route path="/predict-groups" element={<PredictGroups />} />
               <Route path="/predict-matches" element={<PredictMatches />} />
               <Route
-                  path="/predictions/:name"
+                  path="/predictions/:id"
                   element={<DisplayPredictions />}
               />
               <Route
-                  path="/match-predictions/:name"
+                  path="/match-predictions/:id"
                   element={<DisplayMatchPredictions />}
               />
           </Routes>

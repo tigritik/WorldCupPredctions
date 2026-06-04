@@ -53,6 +53,11 @@ export type SubmitGroupPredictionRequest = {
     predictions: GroupPredictions;
 };
 
+export type FetchGroupPredictionResponse = {
+    name: string | null;
+    data: LoadedGroupPredictions | null;
+}
+
 export type MatchPrediction = {
     matchNum: number;
     score: [number | null, number | null];
@@ -63,6 +68,11 @@ export type SubmitMatchPredictionsRequest = {
     predictions: MatchPrediction[];
 };
 
+export type FetchMatchPredictionResponse = {
+    name: string | null;
+    data: MatchResult[] | null;
+}
+
 export type SubmitPredictionResponse =
-    | { ok: true }
+    | { ok: true; id: string }
     | { ok: false; error: string };

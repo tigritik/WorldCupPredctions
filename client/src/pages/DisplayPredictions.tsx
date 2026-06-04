@@ -8,7 +8,8 @@ import {fetchGroupPredictions} from "../api_helpers.ts";
 import "./display-predictions.css"
 
 export default function DisplayPredictions() {
-    const { name } = useParams<{name: string}>();
+    const { id } = useParams<{id: string}>();
+    const [name, setName] = useState("");
     const [groups, setGroups] = useState<LoadedGroup[]>([]);
     const [thirdPlaceTeams, setThirdPlaceTeams] = useState<Team[]>([]);
     
@@ -16,24 +17,25 @@ export default function DisplayPredictions() {
 
     useEffect(() => {
         console.log("fetching groups")
-        if (!name) {
+        if (!id) {
             navigate("/");
             return;
         }
-        fetchGroupPredictions(name).then(data => {
-            if (!data || data.groups.length === 0) {
+        fetchGroupPredictions(id).then(({name, data}) => {
+            if (!data || data.groups.length === 0 || !name) {
                 navigate("/");
                 return;
             }
             setGroups(data.groups);
             setThirdPlaceTeams(data.thirdPlaceTeams);
+            setName(name);
         });
-    }, [name, navigate]);
+    }, [id, navigate]);
 
     return (
         <div className="prediction-page">
             <div className="prediction-header">
-                <h1>{name}'s Predictions</h1>
+                {name && <h1>{name}'s Predictions</h1>}
 
                 <p>
                     Predicted World Cup group standings

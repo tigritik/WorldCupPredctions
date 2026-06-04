@@ -112,7 +112,7 @@ export default function PredictMatches() {
         const result = await submitMatchPredictions(payload);
 
         if (result.ok) {
-            navigate(`/match-predictions/${name}`);
+            navigate(`/match-predictions/${result.id}`);
         } else {
             alert(result.error);
         }

@@ -100,7 +100,7 @@ export default function PredictGroups() {
         const result = await submitGroupPredictions(payload);
 
         if (result.ok) {
-            navigate(`/predictions/${name}`);
+            navigate(`/predictions/${result.id}`);
         } else {
             alert(result.error);
         }
