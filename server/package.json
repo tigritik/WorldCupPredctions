@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.ts"
+    "build": "tsc && tsc-alias",
+    "start": "node dist/server/src/index.js",
+    "zip": "bestzip deploy.zip dist package.json package-lock.json"
   },
   "keywords": [],
   "author": "",
@@ -24,9 +25,11 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.8.0",
     "@types/pg": "^8.20.0",
+    "bestzip": "^3.0.1",
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.17",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3"

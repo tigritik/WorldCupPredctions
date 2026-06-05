@@ -8,7 +8,7 @@ import {calculatePoints} from "@shared/utils";
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 export const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -18,7 +18,7 @@ export const pool = new Pool({
 app.use(express.json());
 // Middleware to allow cors for the frontend
 app.use(cors({
-    origin: 'http://localhost:5173'
+    origin: process.env.FRONTEND_URL
 }));
 
 app.get("/groups", async (_: Request, res: Response) => {
