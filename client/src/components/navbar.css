@@ -1,0 +1,129 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 24px;
+    background-color: #111827;
+    color: white;
+
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+/* Logo */
+.navbar__logo {
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Links (desktop default) */
+.navbar__links {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+/* Links */
+.navbar__link {
+    color: #cbd5e1;
+    text-decoration: none;
+}
+
+.navbar__link.active {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+.navbar__link:hover {
+    color: white;
+}
+
+/* Hamburger hidden on desktop */
+.navbar__hamburger {
+    display: none;
+    width: 28px;
+    height: 22px;
+    position: relative;
+    cursor: pointer;
+}
+
+.navbar__hamburger span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    border-radius: 2px;
+    transition: 0.3s ease;
+}
+
+/* top bar */
+.navbar__hamburger span:nth-child(1) {
+    top: 0;
+}
+
+/* middle bar */
+.navbar__hamburger span:nth-child(2) {
+    top: 9px;
+}
+
+/* bottom bar */
+.navbar__hamburger span:nth-child(3) {
+    top: 18px;
+}
+
+/* OPEN STATE → turn into X */
+.navbar__hamburger.open span:nth-child(1) {
+    transform: rotate(45deg);
+    top: 9px;
+}
+
+.navbar__hamburger.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar__hamburger.open span:nth-child(3) {
+    transform: rotate(-45deg);
+    top: 9px;
+}
+
+/* ========================= */
+/* MOBILE STYLES */
+/* ========================= */
+@media (max-width: 768px) {
+    .navbar__hamburger {
+        display: block;
+    }
+
+    .navbar__links {
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+
+        background-color: #111827;
+
+        flex-direction: column;
+        gap: 0;
+
+        display: none; /* hidden by default */
+    }
+
+    .navbar__links.open {
+        display: flex;
+    }
+
+    .navbar__link {
+        padding: 14px 24px;
+        border-top: 1px solid #1f2937;
+    }
+}
