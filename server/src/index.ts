@@ -1,8 +1,9 @@
 import express, { Request, Response, Application } from 'express';
-import {SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest} from "@shared/types";
+import {LeaderboardEntry, SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest} from "@shared/types";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Pool } from "pg";
+import {calculatePoints} from "@shared/utils";
 
 dotenv.config();
 
@@ -355,6 +356,86 @@ app.get("/match-predictions/:id", async (req: Request<{ id: string }>, res) => {
             ] as [number | null, number | null],
         })),
     });
+});
+
+app.get("/leaderboard", async (req: Request, res: Response) => {
+    const client = await pool.connect();
+
+    try {
+        // 1. get all matches with results
+        const matchesResult = await client.query(`
+            SELECT
+                match_num,
+                home_score,
+                away_score
+            FROM matches
+        `);
+
+        const matchResults = new Map<number, { home: number; away: number; }>();
+
+        for (const row of matchesResult.rows) {
+            if (row.home_score === null || row.away_score === null) continue;
+
+            matchResults.set(row.match_num, {
+                home: row.home_score,
+                away: row.away_score,
+            });
+        }
+
+        // 2. get all prediction sets
+        const setsResult = await client.query(`
+            SELECT id, name
+            FROM match_prediction_sets
+        `);
+
+        const leaderboard: LeaderboardEntry[] = [];
+
+        for (const set of setsResult.rows) {
+            const predictions = await client.query(
+                `
+                SELECT match_num, home_score, away_score
+                FROM match_predictions
+                WHERE prediction_set_id = $1
+            `, [set.id]);
+
+            let points = 0;
+            let maxPoints = 0;
+
+            for (const pred of predictions.rows) {
+                const actual = matchResults.get(pred.match_num);
+
+                if (!actual) continue;
+
+                maxPoints += 3;
+
+                points += calculatePoints(
+                    pred.home_score,
+                    pred.away_score,
+                    actual.home,
+                    actual.away
+                );
+            }
+
+            leaderboard.push({
+                id: set.id,
+                name: set.name,
+                points,
+                maxPoints,
+                rank: 0, // filled later
+            });
+        }
+
+        // 3. sort + rank
+        leaderboard.sort((a, b) => b.points - a.points);
+
+        leaderboard.forEach((entry, i) => {
+            entry.rank = i + 1;
+        });
+
+        res.json(leaderboard);
+    } finally {
+        client.release();
+    }
 });
 
 // Start Server

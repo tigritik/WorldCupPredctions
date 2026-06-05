@@ -8,6 +8,7 @@ import type {
     SubmitPredictionResponse,
     Team
 } from "@shared/types.ts";
+import type {LeaderboardEntry} from "@shared/types";
 
 const endpoint = "http://localhost:3000";
 
@@ -147,4 +148,12 @@ export async function fetchMatchPredictions(id: string): Promise<FetchMatchPredi
             }
         })
     };
+}
+
+export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+    const response = await fetch(`${endpoint}/leaderboard`);
+
+    if (!response.ok) return [];
+
+    return response.json();
 }

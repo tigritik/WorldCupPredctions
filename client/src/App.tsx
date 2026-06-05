@@ -4,6 +4,7 @@ import {BrowserRouter, Route, Routes} from "react-router-dom";
 import DisplayPredictions from "./pages/DisplayPredictions.tsx";
 import PredictMatches from "./pages/PredictMatches.tsx";
 import DisplayMatchPredictions from "./pages/DisplayMatchPredictions.tsx";
+import LeaderboardPage from "./pages/LeaderboardPage.tsx";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
                   path="/match-predictions/:id"
                   element={<DisplayMatchPredictions />}
               />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Routes>
       </BrowserRouter>
   );

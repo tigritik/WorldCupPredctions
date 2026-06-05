@@ -76,3 +76,11 @@ export type FetchMatchPredictionResponse = {
 export type SubmitPredictionResponse =
     | { ok: true; id: string }
     | { ok: false; error: string };
+
+export type LeaderboardEntry = {
+    id: string;
+    name: string;
+    rank: number;
+    points: number;
+    maxPoints: number;
+};

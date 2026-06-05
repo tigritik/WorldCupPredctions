@@ -4,6 +4,40 @@ import type {Team} from "@shared/types.ts";
 export const getFlagUrl = (code: string) =>
     `https://api.fifa.com/api/v3/picture/flags-sq-2/${code}`;
 
+export function calculatePoints( // calculate points for a prediction
+    predictedHome: number | null, predictedAway: number | null, 
+    actualHome: number, actualAway: number): number {
+    
+    if (predictedHome === null || predictedAway === null) {
+        return 0;
+    }
+
+    let points = 0;
+
+    const predictedDiff = predictedHome - predictedAway;
+    const actualDiff = actualHome - actualAway;
+
+    const predictedResult =
+        predictedDiff > 0 ? "W" :
+            predictedDiff < 0 ? "L" : "D";
+
+    const actualResult =
+        actualDiff > 0 ? "W" :
+            actualDiff < 0 ? "L" : "D";
+
+    // 1 point for correct result
+    if (predictedResult === actualResult) points++;
+
+    // 1 point for correct goal difference
+    if (predictedDiff === actualDiff) points++;
+
+    // 1 point for exact score
+    if (predictedHome === actualHome && predictedAway === actualAway)
+        points++;
+
+    return points;
+}
+
 // create empty stats object for a team
 function createStats(team: Team): TeamStats {
     return {
