@@ -84,3 +84,23 @@ export type LeaderboardEntry = {
     points: number;
     maxPoints: number;
 };
+
+export type MatchViewResponse = {
+    matchNum: number;
+    group: string;
+
+    actualScore: [number | null, number | null];
+    predictedScore: [number | null, number | null];
+
+    homeTeam: {
+        id: string;
+        name: string;
+        code: string;
+    };
+
+    awayTeam: {
+        id: string;
+        name: string;
+        code: string;
+    };
+};

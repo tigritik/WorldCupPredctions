@@ -3,7 +3,7 @@ import type {
     FetchMatchPredictionResponse,
     Group,
     GroupPredictions,
-    LoadedGroup, Match, MatchPrediction, MatchResult,
+    LoadedGroup, Match, MatchPrediction, MatchResult, MatchViewResponse,
     SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest,
     SubmitPredictionResponse,
     Team
@@ -156,4 +156,14 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
     if (!response.ok) return [];
 
     return response.json();
+}
+
+export async function fetchMatchView(predictionId: string, matchNum: string): Promise<MatchViewResponse | null> {
+    const res = await fetch(
+        `${endpoint}/match-predictions/${predictionId}/viewMatch/${matchNum}`
+    );
+
+    if (!res.ok) return null;
+
+    return res.json();
 }

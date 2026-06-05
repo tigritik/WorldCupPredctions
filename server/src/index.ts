@@ -358,6 +358,71 @@ app.get("/match-predictions/:id", async (req: Request<{ id: string }>, res) => {
     });
 });
 
+app.get("/match-predictions/:id/viewMatch/:matchNum", async (req, res) => {
+    const { id, matchNum } = req.params;
+
+    const result = await pool.query(`
+        SELECT
+            m.match_num,
+            g.name AS group_name,
+            m.home_score AS actual_home,
+            m.away_score AS actual_away,
+            p.home_score AS predicted_home,
+            p.away_score AS predicted_away,
+            ht.id AS home_id,
+            ht.name AS home_name,
+            ht.code AS home_code,
+            at.id AS away_id,
+            at.name AS away_name,
+            at.code AS away_code
+        FROM match_predictions p
+        JOIN matches m
+            ON m.match_num = p.match_num
+        JOIN groups g
+            ON g.id = m.group_id
+        JOIN teams ht
+            ON ht.id = m.home_team_id
+        JOIN teams at
+            ON at.id = m.away_team_id
+        WHERE p.prediction_set_id = $1 AND p.match_num = $2
+    `, [id, matchNum]);
+
+    if (result.rowCount === 0) {
+        return res.status(404).json({
+            error: "Match not found",
+        });
+    }
+
+    const row = result.rows[0];
+
+    res.json({
+        matchNum: row.match_num,
+        group: row.group_name,
+
+        actualScore: [
+            row.actual_home,
+            row.actual_away,
+        ],
+
+        predictedScore: [
+            row.predicted_home,
+            row.predicted_away,
+        ],
+
+        homeTeam: {
+            id: row.home_id,
+            name: row.home_name,
+            code: row.home_code,
+        },
+
+        awayTeam: {
+            id: row.away_id,
+            name: row.away_name,
+            code: row.away_code,
+        },
+    });
+});
+
 app.get("/leaderboard", async (req: Request, res: Response) => {
     const client = await pool.connect();
 

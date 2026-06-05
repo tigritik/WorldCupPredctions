@@ -5,6 +5,7 @@ import DisplayPredictions from "./pages/DisplayPredictions.tsx";
 import PredictMatches from "./pages/PredictMatches.tsx";
 import DisplayMatchPredictions from "./pages/DisplayMatchPredictions.tsx";
 import LeaderboardPage from "./pages/LeaderboardPage.tsx";
+import MatchViewPage from "./pages/ViewMatch.tsx";
 
 function App() {
   return (
@@ -19,6 +20,10 @@ function App() {
               <Route
                   path="/match-predictions/:id"
                   element={<DisplayMatchPredictions />}
+              />
+              <Route
+                  path="/match-predictions/:id/viewMatch/:matchNum"
+                  element={<MatchViewPage />}
               />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Routes>
