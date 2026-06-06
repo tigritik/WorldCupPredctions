@@ -7,13 +7,14 @@ import DisplayMatchPredictions from "./pages/DisplayMatchPredictions.tsx";
 import LeaderboardPage from "./pages/LeaderboardPage.tsx";
 import MatchViewPage from "./pages/ViewMatch.tsx";
 import Layout from "./components/Layout.tsx";
+import Home from "./pages/Home.tsx";
 
 function App() {
   return (
       <BrowserRouter>
           <Routes >
               <Route element={<Layout />}>
-                  <Route path="/" element={<></>} />
+                  <Route path="/" element={<Home />} />
                   <Route path="/predict-groups" element={<PredictGroups />} />
                   <Route path="/predict-matches" element={<PredictMatches />} />
                   <Route
