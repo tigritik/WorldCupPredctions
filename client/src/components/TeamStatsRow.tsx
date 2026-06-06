@@ -17,7 +17,6 @@ export default function TeamStatsRow ({stats, i}: RowProps) {
                 />{" "}
                 {stats.team.name}
             </td>
-            <td>{stats.points}</td>
             <td>{stats.w}</td>
             <td>{stats.d}</td>
             <td>{stats.l}</td>
