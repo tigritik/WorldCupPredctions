@@ -109,7 +109,7 @@ export default function PredictGroups() {
     return (
         <div style={{ display: "grid", gap: "2rem" }}>
             {groups.map((group) => (
-                <div key={group.name}>
+                <div style={{padding: "0px 24px"}} key={group.name}>
                     <h2>Group {group.name}</h2>
                     <DraggableTable
                         group={group}
@@ -119,7 +119,7 @@ export default function PredictGroups() {
                 </div>
             ))}
             {thirdPlaceRanking.length > 0 && (
-                <div>
+                <div style={{padding: "0px 24px"}}>
                     <h2>Third Place Team Rankings</h2>
                     <DraggableTable
                         group={{
