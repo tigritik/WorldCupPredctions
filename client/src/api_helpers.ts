@@ -10,7 +10,7 @@ import type {
 } from "@shared/types.ts";
 import type {LeaderboardEntry} from "@shared/types";
 
-const endpoint = "http://localhost:3000";
+const endpoint = import.meta.env.VITE_API_HOST;
 
 export async function fetchGroups(): Promise<LoadedGroup[]> {
     const response = await fetch(`${endpoint}/groups`);
