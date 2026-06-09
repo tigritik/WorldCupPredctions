@@ -41,7 +41,8 @@ export default function SortableTeamRow({ team, index }: TeamRow) {
                     fontSize: 18,
                     userSelect: "none",
                     width: 50,
-                    textAlign: "center"
+                    textAlign: "center",
+                    touchAction: "none"
                 }}>
                 {isHovered ? "☰" : index+1}
             </td>

@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {type DragEndEvent, PointerSensor, useSensor, useSensors} from "@dnd-kit/core";
+import {type DragEndEvent, MouseSensor, TouchSensor, useSensor, useSensors} from "@dnd-kit/core";
 import {arrayMove} from "@dnd-kit/sortable";
 import type {GroupPredictions, LoadedGroup, SubmitGroupPredictionRequest} from "@shared/types.ts";
 import {fetchGroups, submitGroupPredictions} from "../api_helpers.ts";
@@ -26,8 +26,14 @@ export default function PredictGroups() {
         .filter(team => team !== undefined);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, {
+        useSensor(MouseSensor, {
             activationConstraint: { distance: 5 },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 25,
+                tolerance: 8
+            }
         })
     );
 
