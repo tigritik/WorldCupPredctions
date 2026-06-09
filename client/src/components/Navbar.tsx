@@ -55,6 +55,16 @@ export default function Navbar() {
                 </NavLink>
 
                 <NavLink
+                    to="/predict-bracket"
+                    onClick={closeMenu}
+                    className={({ isActive }) =>
+                        isActive ? "navbar__link active" : "navbar__link"
+                    }
+                >
+                    Predict Bracket
+                </NavLink>
+
+                <NavLink
                     to="/leaderboard"
                     onClick={closeMenu}
                     className={({ isActive }) =>

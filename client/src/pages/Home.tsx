@@ -80,6 +80,24 @@ export default function Home() {
                         View Leaderboard
                     </button>
                 </div>
+                <div className="home__card">
+                    <h2>Predict Bracket</h2>
+                    <p>
+                        Predict the knockout round bracket March Madness style.
+                    </p>
+                    <p className="home__note">
+                        Predict the winner of each match, and pick your champion.
+                        Each correct pick in the round of 32 is worth 1 point.
+                        Correct picks in each successive round double in value.
+                    </p>
+                    <p>
+                        THIS FEATURE WILL GO LIVE ONCE THE KNOCKOUTS ARE FIXED
+                    </p>
+
+                    <button onClick={() => navigate("/predict-bracket")}>
+                        Go to Predict Bracket
+                    </button>
+                </div>
             </section>
         </div>
     );

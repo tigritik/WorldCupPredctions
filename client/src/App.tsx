@@ -29,6 +29,9 @@ function App() {
                       path="/match-predictions/:id/viewMatch/:matchNum"
                       element={<MatchViewPage />}
                   />
+                  <Route path="/predict-bracket" element={
+                      <p>THIS FEATURE WILL GO LIVE ONCE THE KNOCKOUTS ARE FIXED</p>
+                  } />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
