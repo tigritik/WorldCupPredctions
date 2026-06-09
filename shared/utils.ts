@@ -1,8 +1,73 @@
 import type {MatchResult, TeamStats} from "./types";
-import type {Team} from "@shared/types.ts";
+import type {Match, Team, GroupPredictions, MatchPrediction} from "@shared/types.ts";
 
 export const getFlagUrl = (code: string) =>
     `https://api.fifa.com/api/v3/picture/flags-sq-2/${code}`;
+
+export function groupPredsToMatchPreds(groupPredictions: GroupPredictions, matches: Match[]): MatchPrediction[] {
+    // teamId -> rank within group
+    const teamRankMap = new Map<string, number>();
+
+    for (const teamIds of Object.values(groupPredictions.groups)) {
+        teamIds.forEach((teamId, index) => {
+            teamRankMap.set(teamId, index + 1);
+        });
+    }
+
+    // groupName -> winning margin for 3rd-place team
+    const thirdPlaceMarginMap = new Map<string, number>();
+
+    groupPredictions.thirdPlaceRanking.forEach((groupName, index) => {
+        thirdPlaceMarginMap.set(
+            groupName,
+            groupPredictions.thirdPlaceRanking.length - index + 1
+        );
+    });
+
+    const predictions: MatchPrediction[] = [];
+
+    for (const match of matches) {
+        const [home_id, away_id] = match.teamIds;
+        const homeRank = teamRankMap.get(home_id);
+        const awayRank = teamRankMap.get(away_id);
+
+        if (!homeRank || !awayRank)
+            throw new Error(`Missing rank for teams ${home_id} / ${away_id}`);
+
+        let homeScore: number;
+        let awayScore: number;
+
+        // Higher-ranked team always wins
+        if (homeRank < awayRank) {
+            // Special case: 3rd beats 4th
+            if (homeRank === 3 && awayRank === 4) {
+                const margin = thirdPlaceMarginMap.get(match.group) ?? 1;
+                homeScore = margin;
+                awayScore = 0;
+            } else {
+                homeScore = 1;
+                awayScore = 0;
+            }
+        } else {
+            // Special case: 3rd beats 4th
+            if (awayRank === 3 && homeRank === 4) {
+                const margin = thirdPlaceMarginMap.get(match.group) ?? 1;
+                homeScore = 0;
+                awayScore = margin;
+            } else {
+                homeScore = 0;
+                awayScore = 1;
+            }
+        }
+
+        predictions.push({
+            matchNum: match.matchNum,
+            score: [homeScore, awayScore]
+        });
+    }
+
+    return predictions;
+}
 
 export function calculatePoints( // calculate points for a prediction
     predictedHome: number | null, predictedAway: number | null, 

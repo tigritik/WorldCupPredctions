@@ -28,6 +28,9 @@ export default function Home() {
                         These predictions are currently not scored on the leaderboard.
                         You must save the URL after submission to revisit them later.
                     </p>
+                    <p>
+                        Added a feature where group predictions are translated to match predictions with the same UUID.
+                    </p>
 
                     <button onClick={() => navigate("/predict-groups")}>
                         Go to Predict Groups

@@ -64,6 +64,7 @@ export type MatchPrediction = {
 };
 
 export type SubmitMatchPredictionsRequest = {
+    id?: string;
     name: string;
     predictions: MatchPrediction[];
 };

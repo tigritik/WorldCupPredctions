@@ -3,7 +3,8 @@ import {LeaderboardEntry, SubmitGroupPredictionRequest, SubmitMatchPredictionsRe
 import cors from "cors";
 import dotenv from "dotenv";
 import { Pool } from "pg";
-import {calculatePoints} from "@shared/utils";
+import {calculatePoints, groupPredsToMatchPreds} from "@shared/utils";
+import {fetchMatches, insertMatchPredictions} from "./db";
 
 dotenv.config();
 
@@ -171,6 +172,13 @@ app.post("/group-predictions", async (req, res) => {
             VALUES ${thirdPlacePlaceholders.join(",")}
         `, thirdPlaceValues);
 
+        // also convert group rankings to match predictions and add to db
+        const matches = await fetchMatches(pool);
+        const matchPreds = groupPredsToMatchPreds(body.predictions, matches);
+        await insertMatchPredictions(client, {
+            id: predictionSetId, name: `${body.name} (Group)`, predictions: matchPreds
+        });
+
         await client.query("COMMIT");
 
         return res.json({
@@ -242,18 +250,9 @@ app.get("/group-predictions/:id", async (req: Request<{ id: string }>, res) => {
 });
 
 app.get("/matches", async (_: Request, res: Response) => {
-    const result = await pool.query(`
-        SELECT
-            m.match_num AS "matchNum",
-            g.name AS "group",
-            ARRAY[m.home_team_id, m.away_team_id] AS "teamIds"
-        FROM matches m
-        JOIN groups g
-            ON g.id = m.group_id
-        ORDER BY g.name, m.match_num
-    `);
+    const matches = await fetchMatches(pool);
 
-    res.json(result.rows);
+    res.json(matches);
 });
 
 app.post("/match-predictions", async (req, res) => {
@@ -267,43 +266,7 @@ app.post("/match-predictions", async (req, res) => {
     try {
         await client.query("BEGIN");
 
-        const predictionSetResult = await client.query(`
-            INSERT INTO match_prediction_sets(name)
-            VALUES ($1)
-            RETURNING id
-        `, [body.name]);
-
-        const predictionSetId = predictionSetResult.rows[0].id;
-
-        const values: unknown[] = [];
-        const placeholders: string[] = [];
-
-        let paramIndex = 1;
-
-        for (const prediction of body.predictions) {
-            placeholders.push(
-                `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3})`
-            );
-
-            values.push(
-                predictionSetId,
-                prediction.matchNum,
-                prediction.score[0],
-                prediction.score[1]
-            );
-
-            paramIndex += 4;
-        }
-
-        await client.query(`
-            INSERT INTO match_predictions (
-                prediction_set_id,
-                match_num,
-                home_score,
-                away_score
-            )
-            VALUES ${placeholders.join(",")}
-        `, values);
+        const predictionSetId = await insertMatchPredictions(client, body);
 
         await client.query("COMMIT");
 
