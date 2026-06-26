@@ -95,6 +95,7 @@ export function Bracket({ editable, onChange }: BracketProps) {
                     title="Round of 32"
                     matches={rounds.RO32}
                     editable={editable}
+                    round={0}
                     onSelectWinner={handleSelectWinner}
                 />
 
@@ -102,6 +103,7 @@ export function Bracket({ editable, onChange }: BracketProps) {
                     title="Round of 16"
                     matches={rounds.RO16}
                     editable={editable}
+                    round={1}
                     onSelectWinner={handleSelectWinner}
                 />
 
@@ -109,6 +111,7 @@ export function Bracket({ editable, onChange }: BracketProps) {
                     title="Quarterfinals"
                     matches={rounds.QF}
                     editable={editable}
+                    round={2}
                     onSelectWinner={handleSelectWinner}
                 />
 
@@ -116,6 +119,7 @@ export function Bracket({ editable, onChange }: BracketProps) {
                     title="Semifinals"
                     matches={rounds.SF}
                     editable={editable}
+                    round={3}
                     onSelectWinner={handleSelectWinner}
                 />
 
@@ -123,6 +127,7 @@ export function Bracket({ editable, onChange }: BracketProps) {
                     title="3rd Place"
                     matches={rounds.F3}
                     editable={editable}
+                    round={4}
                     onSelectWinner={handleSelectWinner}
                 />
 
@@ -130,6 +135,7 @@ export function Bracket({ editable, onChange }: BracketProps) {
                     title="Final"
                     matches={rounds.FINAL}
                     editable={editable}
+                    round={4}
                     onSelectWinner={handleSelectWinner}
                 />
             </div>

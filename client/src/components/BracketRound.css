@@ -21,3 +21,11 @@
 
     width: 100%;
 }
+
+/* Desktop only */
+@media (min-width: 768px) {
+    .bracket-round-matches {
+        padding: var(--round-padding, 0px);
+        gap: var(--round-gap, 0px);
+    }
+}
