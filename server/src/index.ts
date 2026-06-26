@@ -1,5 +1,10 @@
 import express, { Request, Response, Application } from 'express';
-import {LeaderboardEntry, SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest} from "@shared/types";
+import {
+    LeaderboardEntry,
+    SubmitBracketPredictionsRequest,
+    SubmitGroupPredictionRequest,
+    SubmitMatchPredictionsRequest
+} from "@shared/types";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Pool } from "pg";
@@ -62,6 +67,7 @@ app.get("/teams/:id", async (req: Request<{id: string}>, res: Response) => {
 });
 
 app.post("/group-predictions", async (req, res) => {
+    // return res.status(400).json({error: "Tournament has begun - Submission Denied!"});
     const body = req.body as SubmitGroupPredictionRequest;
     if (body.name === "") return res.status(400).json({error: "Invalid Name!"});
     if (body.name.length > 100)
@@ -256,6 +262,7 @@ app.get("/matches", async (_: Request, res: Response) => {
 });
 
 app.post("/match-predictions", async (req, res) => {
+    // return res.status(400).json({error: "Tournament has begun - Submission Denied!"});
     const body = req.body as SubmitMatchPredictionsRequest;
     if (body.name === "") return res.status(400).json({error: "Invalid Name!"});
     if (body.name.length > 100)
@@ -461,6 +468,84 @@ app.get("/leaderboard", async (req: Request, res: Response) => {
         });
 
         res.json(leaderboard);
+    } finally {
+        client.release();
+    }
+});
+
+app.get("/knockout-matches", async (_: Request, res: Response) => {
+    const result = await pool.query(`
+        SELECT
+            match_num AS "matchNum",
+            home_ref AS "homeRef",
+            away_ref AS "awayRef",
+            ARRAY[home_team_id, away_team_id] AS "teamIds",
+            winner_team_id AS "winnerId",
+            point_value AS "pointValue"
+        FROM knockout_matches
+        ORDER BY match_num
+    `);
+
+    res.json(result.rows);
+});
+
+app.post("/bracket-predictions", async (req, res) => {
+    const body = req.body as SubmitBracketPredictionsRequest;
+    if (body.name === "") return res.status(400).json({ error: "Invalid Name!" });
+    if (body.name.length > 100)
+        return res.status(400).json({ error: "Name too long!" });
+
+    const client = await pool.connect();
+
+    try {
+        await client.query("BEGIN");
+
+        const setResult = await client.query(`
+            INSERT INTO bracket_prediction_sets (name)
+            VALUES ($1)
+            RETURNING id
+        `, [body.name]);
+
+        const predictionSetId = setResult.rows[0].id;
+
+        const values: unknown[] = [];
+        const placeholders: string[] = [];
+
+        let i = 1;
+
+        for (const p of body.predictions) {
+            placeholders.push(
+                `($${i}, $${i + 1}, $${i + 2})`
+            );
+
+            values.push(
+                predictionSetId,
+                p.matchNum,
+                p.winnerTeamId
+            );
+
+            i += 3;
+        }
+
+        await client.query(`
+            INSERT INTO bracket_predictions (
+                prediction_set_id,
+                match_num,
+                winner_team_id
+            )
+            VALUES ${placeholders.join(",")}
+        `, values);
+
+        await client.query("COMMIT");
+
+        return res.json({
+            ok: true,
+            id: predictionSetId,
+        });
+
+    } catch (err) {
+        await client.query("ROLLBACK");
+        throw err;
     } finally {
         client.release();
     }
