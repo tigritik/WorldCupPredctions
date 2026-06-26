@@ -1,5 +1,6 @@
 import type { KnockoutMatchResult, Team } from "@shared/types";
 import "./EditableBracketMatch.css";
+import {getFlagUrl} from "@shared/utils.ts";
 
 type Props = {
     match: KnockoutMatchResult;
@@ -29,7 +30,8 @@ export default function EditableBracketMatch(props: Props) {
                 className={`team ${isWinner(home) ? "winner" : ""} ${home ? "clickable" : ""}`}
                 onClick={() => handleClick(home)}
             >
-                {home?.code ?? match.homeRef}
+                {home?.code && <img className="flag" alt="flag" src={getFlagUrl(home.code)} />}
+                {home?.name ?? match.homeRef}
             </div>
 
             <div className="vs">vs</div>
@@ -38,7 +40,8 @@ export default function EditableBracketMatch(props: Props) {
                 className={`team ${isWinner(away) ? "winner" : ""} ${away ? "clickable" : ""}`}
                 onClick={() => handleClick(away)}
             >
-                {away?.code ?? match.awayRef}
+                {away?.code && <img className="flag" alt="flag" src={getFlagUrl(away.code)} />}
+                {away?.name ?? match.awayRef}
             </div>
 
         </div>

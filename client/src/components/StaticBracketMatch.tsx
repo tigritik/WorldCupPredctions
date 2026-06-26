@@ -1,12 +1,12 @@
 import type { KnockoutMatchResult } from "@shared/types";
 import "./StaticBracketMatch.css";
+import {getFlagUrl} from "@shared/utils.ts";
 
 type Props = {
     match: KnockoutMatchResult;
 };
 
 export default function StaticBracketMatch({ match }: Props) {
-
     const home = match.teams[0];
     const away = match.teams[1];
 
@@ -17,13 +17,15 @@ export default function StaticBracketMatch({ match }: Props) {
     return (
         <div className="bracket-match">
             <div className={`team ${isHomeWinner ? "winner" : ""}`}>
-                {home?.code ?? match.homeRef}
+                {home?.code && <img className="flag" alt="flag" src={getFlagUrl(home.code)} />}
+                {home?.name ?? match.homeRef}
             </div>
 
             <div className="vs">vs</div>
 
             <div className={`team ${isAwayWinner ? "winner" : ""}`}>
-                {away?.code ?? match.awayRef}
+                {away?.code && <img className="flag" alt="flag" src={getFlagUrl(away.code)} />}
+                {away?.name ?? match.awayRef}
             </div>
 
         </div>

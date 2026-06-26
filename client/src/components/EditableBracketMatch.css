@@ -14,7 +14,11 @@
 
 .team {
     width: 100%;
-    text-align: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 
     padding: 6px 8px;
     border-radius: 6px;
@@ -43,4 +47,12 @@
     font-size: 11px;
     color: #888;
     margin: 4px 0;
+}
+
+.flag {
+    width: 24px;
+    height: 16px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
 }
