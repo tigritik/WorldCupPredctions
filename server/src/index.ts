@@ -556,6 +556,151 @@ app.post("/bracket-predictions", async (req, res) => {
     }
 });
 
+app.get("/bracket-predictions/:id", async (req: Request<{ id: string }>, res) => {
+    const result = await pool.query(`
+        SELECT
+            s.name,
+            p.match_num,
+            p.winner_team_id
+        FROM bracket_prediction_sets s
+        JOIN bracket_predictions p
+            ON p.prediction_set_id = s.id
+        WHERE s.id = $1
+        ORDER BY p.match_num
+    `, [req.params.id]);
+
+    if (result.rowCount === 0) {
+        return res.status(404).json({
+            error: "Prediction not found",
+        });
+    }
+
+    res.json({
+        id: req.params.id,
+        name: result.rows[0].name,
+        predictions: result.rows.map(row => ({
+            matchNum: row.match_num,
+            winnerTeamId: row.winner_team_id,
+        })),
+    });
+});
+
+app.get("/bracket-leaderboard", async (_: Request, res: Response) => {
+    const result = await pool.query(`
+        WITH leaderboard AS (
+            SELECT
+                s.id,
+                s.name,
+                s.created_at,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN p.winner_team_id = km.winner_team_id
+                            THEN km.point_value
+                            ELSE 0
+                        END
+                    ), 0) AS points,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN km.winner_team_id IS NOT NULL
+                            THEN km.point_value
+                            ELSE 0
+                        END
+                    ), 0) AS max_points,
+                MAX(
+                    CASE
+                        WHEN p.match_num = 104
+                        THEN p.winner_team_id
+                    END
+                ) AS first_id,
+                MAX(
+                    CASE
+                        WHEN p.match_num = 103
+                        THEN p.winner_team_id
+                    END
+                ) AS third_id,
+                CASE
+                    WHEN MAX(CASE WHEN p.match_num = 104 THEN p.winner_team_id END)
+                        = MAX(CASE WHEN p.match_num = 102 THEN p.winner_team_id END)
+                        THEN
+                        MAX(CASE WHEN p.match_num = 101 THEN p.winner_team_id END)
+                    ELSE
+                        MAX(CASE WHEN p.match_num = 102 THEN p.winner_team_id END)
+                END AS second_id
+            FROM bracket_prediction_sets s
+            JOIN bracket_predictions p
+                ON p.prediction_set_id = s.id
+            JOIN knockout_matches km
+                ON km.match_num = p.match_num
+            GROUP BY
+                s.id,
+                s.name,
+                s.created_at
+        )
+        SELECT
+            RANK() OVER (
+                ORDER BY points DESC, created_at ASC
+            ) AS rank,
+
+            leaderboard.id,
+            leaderboard.name,
+            leaderboard.points,
+            leaderboard.max_points,
+
+            first.id   AS first_team_id,
+            first.name AS first_team_name,
+            first.code AS first_team_code,
+
+            second.id   AS second_team_id,
+            second.name AS second_team_name,
+            second.code AS second_team_code,
+
+            third.id   AS third_team_id,
+            third.name AS third_team_name,
+            third.code AS third_team_code
+
+        FROM leaderboard
+
+        LEFT JOIN teams first
+            ON first.id = leaderboard.first_id
+
+        LEFT JOIN teams second
+            ON second.id = leaderboard.second_id
+
+        LEFT JOIN teams third
+            ON third.id = leaderboard.third_id
+
+        ORDER BY rank;
+    `);
+
+    res.json(result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        rank: Number(row.rank),
+        points: Number(row.points),
+        maxPoints: Number(row.max_points),
+
+        first: {
+            id: row.first_team_id,
+            name: row.first_team_name,
+            code: row.first_team_code
+        },
+
+        second: {
+            id: row.second_team_id,
+            name: row.second_team_name,
+            code: row.second_team_code
+        },
+
+        third: {
+            id: row.third_team_id,
+            name: row.third_team_name,
+            code: row.third_team_code
+        }
+    })));
+});
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`[server]: Server is running at http://localhost:${PORT}`);
