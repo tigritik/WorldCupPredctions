@@ -2,8 +2,8 @@ import type {
     FetchGroupPredictionResponse,
     FetchMatchPredictionResponse,
     Group,
-    GroupPredictions,
-    LoadedGroup, Match, MatchPrediction, MatchResult, MatchViewResponse,
+    GroupPredictions, KnockoutMatch, KnockoutMatchResult,
+    LoadedGroup, Match, MatchPrediction, MatchResult, MatchViewResponse, SubmitBracketPredictionsRequest,
     SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest,
     SubmitPredictionResponse,
     Team
@@ -166,4 +166,44 @@ export async function fetchMatchView(predictionId: string, matchNum: string): Pr
     if (!res.ok) return null;
 
     return res.json();
+}
+
+export async function fetchKnockoutMatches(): Promise<KnockoutMatchResult[]> {
+    const response = await fetch(`${endpoint}/knockout-matches`);
+    const matches: KnockoutMatch[] = await response.json();
+
+    const teams = await Promise.all(
+        Array.from(new Set(
+            matches.flatMap(m => m.teamIds)
+        ))
+            .filter(Boolean)
+            .map(id => fetchTeam(id as string))
+    );
+
+    const teamMap = new Map(teams.map(t => [t.id, t]));
+
+    console.log(matches[0]);
+
+    return matches.map(match => ({
+        matchNum: match.matchNum,
+        homeRef: match.homeRef,
+        awayRef: match.awayRef,
+        teams: match.teamIds.map(
+            teamId => teamId ? teamMap.get(teamId) ?? null : null
+        ) as [Team|null, Team|null],
+        pointValue: match.pointValue,
+        winner: match.winnerId ? teamMap.get(match.winnerId) ?? null : null
+    }));
+}
+
+export async function submitBracketPredictions(payload: SubmitBracketPredictionsRequest): Promise<SubmitPredictionResponse> {
+    const response = await fetch(`${endpoint}/bracket-predictions`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    return response.json();
 }
