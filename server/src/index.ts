@@ -495,6 +495,11 @@ app.post("/bracket-predictions", async (req, res) => {
     if (body.name.length > 100)
         return res.status(400).json({ error: "Name too long!" });
 
+    const nullCount = body.predictions.filter(
+        pred => pred.winnerTeamId === null
+    ).length;
+    if (nullCount > 0) return res.status(400).json({ error: "Bracket missing entries!" });
+
     const client = await pool.connect();
 
     try {
