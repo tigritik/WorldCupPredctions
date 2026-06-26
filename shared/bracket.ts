@@ -75,3 +75,20 @@ export function matchesToPredictions(matches: KnockoutMatchResult[]) {
         winnerTeamId: match.winner?.id ?? null,
     }));
 }
+
+export function orderMatchGroup(currRound: KnockoutMatchResult[], nextRound: KnockoutMatchResult[]) {
+    const sortedCurrentRound: KnockoutMatchResult[] = [];
+    
+    const map = new Map(
+        currRound.map(match => [match.matchNum, match])
+    );
+    
+    for (const match of nextRound) {
+        sortedCurrentRound.push(
+            map.get(Number(match.homeRef.substring(1)))!,
+            map.get(Number(match.awayRef.substring(1)))!
+        )
+    }
+    
+    return sortedCurrentRound;
+}

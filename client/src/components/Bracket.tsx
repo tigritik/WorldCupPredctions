@@ -8,7 +8,7 @@ import type {
 import {
     buildInitialBracket,
     updateWinner,
-    matchesToPredictions
+    matchesToPredictions, orderMatchGroup
 } from "@shared/bracket";
 import "./Bracket.css";
 import { fetchKnockoutMatches } from "../api_helpers";
@@ -75,6 +75,11 @@ export function Bracket({ editable, onChange }: BracketProps) {
                 groups.FINAL.push(m);
             }
         }
+
+        groups["SF"] = orderMatchGroup(groups["SF"], groups["FINAL"]);
+        groups["QF"] = orderMatchGroup(groups["QF"], groups["SF"]);
+        groups["RO16"] = orderMatchGroup(groups["RO16"], groups["QF"]);
+        groups["RO32"] = orderMatchGroup(groups["RO32"], groups["RO16"]);
 
         return groups;
     }, [matches]);

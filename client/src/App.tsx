@@ -8,7 +8,6 @@ import LeaderboardPage from "./pages/LeaderboardPage.tsx";
 import MatchViewPage from "./pages/ViewMatch.tsx";
 import Layout from "./components/Layout.tsx";
 import Home from "./pages/Home.tsx";
-import {Bracket} from "./components/Bracket.tsx";
 import PredictBracket from "./pages/PredictBracket.tsx";
 
 function App() {
