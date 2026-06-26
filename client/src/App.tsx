@@ -8,6 +8,8 @@ import LeaderboardPage from "./pages/LeaderboardPage.tsx";
 import MatchViewPage from "./pages/ViewMatch.tsx";
 import Layout from "./components/Layout.tsx";
 import Home from "./pages/Home.tsx";
+import {Bracket} from "./components/Bracket.tsx";
+import PredictBracket from "./pages/PredictBracket.tsx";
 
 function App() {
   return (
@@ -29,9 +31,7 @@ function App() {
                       path="/match-predictions/:id/viewMatch/:matchNum"
                       element={<MatchViewPage />}
                   />
-                  <Route path="/predict-bracket" element={
-                      <p>THIS FEATURE WILL GO LIVE ONCE THE KNOCKOUTS ARE FIXED</p>
-                  } />
+                  <Route path="/predict-bracket" element={<PredictBracket />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
