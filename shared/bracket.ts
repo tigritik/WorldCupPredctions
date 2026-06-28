@@ -1,11 +1,13 @@
 import type {KnockoutMatchResult, Team} from "@shared/types.ts";
 
 export function buildInitialBracket(matches: KnockoutMatchResult[], editable: boolean) {
-    return matches.map(match => ({
+    const bracket = matches.map(match => ({
         ...match,
         teams: editable && match.matchNum > 88 ? [null, null] as [null, null] : match.teams,
-        winner: editable && match.matchNum > 88 ? null : match.winner
+        winner: editable ? null : match.winner
     }));
+    
+    return recomputeBracket(bracket);
 }
 
 function resolveReference(ref: string, matches: Map<number, KnockoutMatchResult>) {
