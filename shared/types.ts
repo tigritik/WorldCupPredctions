@@ -102,6 +102,11 @@ export type SubmitBracketPredictionsRequest = {
     predictions: BracketPrediction[];
 };
 
+export type FetchBracketResponse = {
+    name: string | null;
+    data: KnockoutMatchResult[] | null;
+}
+
 export type SubmitPredictionResponse =
     | { ok: true; id: string }
     | { ok: false; error: string };
@@ -113,6 +118,12 @@ export type LeaderboardEntry = {
     points: number;
     maxPoints: number;
 };
+
+export type BracketLeaderboardEntry = LeaderboardEntry & {
+    first: Team;
+    second: Team;
+    third: Team;
+}
 
 export type MatchViewResponse = {
     matchNum: number;
