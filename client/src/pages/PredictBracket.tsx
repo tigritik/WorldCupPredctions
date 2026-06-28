@@ -1,20 +1,27 @@
-import {useCallback, useState} from "react";
+import {useEffect, useState} from "react";
 import {Bracket} from "../components/Bracket.tsx";
-import type {BracketPrediction} from "@shared/types";
-import {submitBracketPredictions} from "../api_helpers.ts";
+import {fetchKnockoutMatches, submitBracketPredictions} from "../api_helpers.ts";
 import {useNavigate} from "react-router-dom";
+import type {KnockoutMatchResult} from "@shared/types.ts";
+import {buildInitialBracket, matchesToPredictions} from "@shared/bracket.ts";
+import "./predict-bracket.css";
 
 export default function PredictBracket() {
     const [name, setName] = useState<string>("");
-    const [predictions, setPredictions] = useState<BracketPrediction[]>([]);
+    const [bracket, setBracket] = useState<KnockoutMatchResult[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const onChange = useCallback(
-        (preds: BracketPrediction[]) => setPredictions(preds), []
-    );
+    // load bracket
+    useEffect(() => {
+        fetchKnockoutMatches().then(
+            data => setBracket(buildInitialBracket(data, true))
+        ).finally(() => setLoading(false));
+    }, [loading]);
 
     const navigate = useNavigate();
 
     async function handleSubmit() {
+        const predictions = matchesToPredictions(bracket);
         const payload = {predictions, name};
         const result = await submitBracketPredictions(payload);
 
@@ -26,29 +33,33 @@ export default function PredictBracket() {
     }
 
     return (
-        <div className="predict-page">
-            <div className="hero">
+        <div className="bracket-predict-page">
+            <div className="bracket-hero">
                 <h1>Predict Bracket</h1>
                 <p>
                     Select a winner in every match to predict the champion.
                 </p>
             </div>
 
-            <div className="top-bar">
+            <div className="bracket-top-bar">
                 <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Bracket name"
-                    className="name-input"
+                    className="bracket-name-input"
                 />
 
-                <button onClick={handleSubmit} className="submit-button">
+                <button onClick={handleSubmit} className="bracket-submit-button">
                     Submit Bracket
                 </button>
             </div>
 
             <div>
-                <Bracket editable={true} onChange={onChange} />
+                {
+                    loading ?
+                    <div className="bracket-loading">Loading bracket...</div> :
+                    <Bracket editable={true} matches={bracket} setMatches={setBracket} />
+                }
             </div>
         </div>
     );
