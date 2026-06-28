@@ -9,6 +9,8 @@ import MatchViewPage from "./pages/ViewMatch.tsx";
 import Layout from "./components/Layout.tsx";
 import Home from "./pages/Home.tsx";
 import PredictBracket from "./pages/PredictBracket.tsx";
+import KnockoutLeaderboardPage from "./pages/KnockoutLeaderboard.tsx";
+import DisplayBracket from "./pages/DisplayBracket.tsx";
 
 function App() {
   return (
@@ -31,7 +33,9 @@ function App() {
                       element={<MatchViewPage />}
                   />
                   <Route path="/predict-bracket" element={<PredictBracket />} />
+                  <Route path="/bracket/:id" element={<DisplayBracket />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  <Route path="/knockout-leaderboard" element={<KnockoutLeaderboardPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
           </Routes>
