@@ -209,6 +209,8 @@ export async function submitBracketPredictions(payload: SubmitBracketPredictions
 
 export async function fetchBracket(id: string): Promise<FetchBracketResponse> {
     const response = await fetch(`${endpoint}/bracket-predictions/${id}`);
+    if (!response.ok) return {name: null, data: null};
+
     const json = await response.json();
     const predictedBracket: BracketPrediction[] = json.predictions;
     const name: string = json.name;
