@@ -1,14 +1,15 @@
 import type {
+    BracketLeaderboardEntry, FetchBracketResponse,
     FetchGroupPredictionResponse,
     FetchMatchPredictionResponse,
     Group,
-    GroupPredictions,
-    LoadedGroup, Match, MatchPrediction, MatchResult, MatchViewResponse,
+    GroupPredictions, KnockoutMatch, KnockoutMatchResult,
+    LoadedGroup, Match, MatchPrediction, MatchResult, MatchViewResponse, SubmitBracketPredictionsRequest,
     SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest,
     SubmitPredictionResponse,
     Team
 } from "@shared/types.ts";
-import type {LeaderboardEntry} from "@shared/types";
+import type {BracketPrediction, LeaderboardEntry} from "@shared/types";
 
 const endpoint = import.meta.env.VITE_API_HOST;
 
@@ -166,4 +167,74 @@ export async function fetchMatchView(predictionId: string, matchNum: string): Pr
     if (!res.ok) return null;
 
     return res.json();
+}
+
+export async function fetchKnockoutMatches(): Promise<KnockoutMatchResult[]> {
+    const response = await fetch(`${endpoint}/knockout-matches`);
+    const matches: KnockoutMatch[] = await response.json();
+
+    const teams = await Promise.all(
+        Array.from(new Set(
+            matches.flatMap(m => m.teamIds)
+        ))
+            .filter(Boolean)
+            .map(id => fetchTeam(id as string))
+    );
+
+    const teamMap = new Map(teams.map(t => [t.id, t]));
+
+    return matches.map(match => ({
+        matchNum: match.matchNum,
+        homeRef: match.homeRef,
+        awayRef: match.awayRef,
+        teams: match.teamIds.map(
+            teamId => teamId ? teamMap.get(teamId) ?? null : null
+        ) as [Team|null, Team|null],
+        pointValue: match.pointValue,
+        winner: match.winnerId ? teamMap.get(match.winnerId) ?? null : null
+    }));
+}
+
+export async function submitBracketPredictions(payload: SubmitBracketPredictionsRequest): Promise<SubmitPredictionResponse> {
+    const response = await fetch(`${endpoint}/bracket-predictions`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    return response.json();
+}
+
+export async function fetchBracket(id: string): Promise<FetchBracketResponse> {
+    const response = await fetch(`${endpoint}/bracket-predictions/${id}`);
+    const json = await response.json();
+    const predictedBracket: BracketPrediction[] = json.predictions;
+    const name: string = json.name;
+
+    const matches= await fetchKnockoutMatches();
+    const matchMap = new Map(
+        matches.map(match => [match.matchNum, match])
+    );
+
+    const data = await Promise.all(predictedBracket.map(async pred => {
+        const match = matchMap.get(pred.matchNum);
+        if (!match) throw new Error(`Predictions missing match ${pred.matchNum}`);
+
+        return {
+            ...match,
+            winner: pred.winnerTeamId === null ? null : await fetchTeam(pred.winnerTeamId)
+        };
+    }));
+
+    return { name, data };
+}
+
+export async function fetchBracketLeaderboard(): Promise<BracketLeaderboardEntry[]> {
+    const response = await fetch(`${endpoint}/bracket-leaderboard`);
+
+    if (!response.ok) return [];
+
+    return response.json();
 }

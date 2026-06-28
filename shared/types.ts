@@ -38,6 +38,24 @@ export type TeamStats = {
     l: number;
 };
 
+export type KnockoutMatch = {
+    matchNum: number;
+    homeRef: string;
+    awayRef: string;
+    teamIds: [string|null, string|null];
+    pointValue: number;
+    winnerId: string | null;
+};
+
+export type KnockoutMatchResult = {
+    matchNum: number;
+    homeRef: string;
+    awayRef: string;
+    teams: [Team|null, Team|null];
+    pointValue: number;
+    winner: Team | null;
+};
+
 export type GroupPredictions = {
     groups: Record<string, string[]>;
     thirdPlaceRanking: string[];
@@ -74,6 +92,21 @@ export type FetchMatchPredictionResponse = {
     data: MatchResult[] | null;
 }
 
+export type BracketPrediction = {
+    matchNum: number;
+    winnerTeamId: string | null;
+};
+
+export type SubmitBracketPredictionsRequest = {
+    name: string;
+    predictions: BracketPrediction[];
+};
+
+export type FetchBracketResponse = {
+    name: string | null;
+    data: KnockoutMatchResult[] | null;
+}
+
 export type SubmitPredictionResponse =
     | { ok: true; id: string }
     | { ok: false; error: string };
@@ -85,6 +118,12 @@ export type LeaderboardEntry = {
     points: number;
     maxPoints: number;
 };
+
+export type BracketLeaderboardEntry = LeaderboardEntry & {
+    first: Team;
+    second: Team;
+    third: Team;
+}
 
 export type MatchViewResponse = {
     matchNum: number;

@@ -1,5 +1,10 @@
 import express, { Request, Response, Application } from 'express';
-import {LeaderboardEntry, SubmitGroupPredictionRequest, SubmitMatchPredictionsRequest} from "@shared/types";
+import {
+    LeaderboardEntry,
+    SubmitBracketPredictionsRequest,
+    SubmitGroupPredictionRequest,
+    SubmitMatchPredictionsRequest
+} from "@shared/types";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Pool } from "pg";
@@ -62,6 +67,7 @@ app.get("/teams/:id", async (req: Request<{id: string}>, res: Response) => {
 });
 
 app.post("/group-predictions", async (req, res) => {
+    // return res.status(400).json({error: "Tournament has begun - Submission Denied!"});
     const body = req.body as SubmitGroupPredictionRequest;
     if (body.name === "") return res.status(400).json({error: "Invalid Name!"});
     if (body.name.length > 100)
@@ -256,6 +262,7 @@ app.get("/matches", async (_: Request, res: Response) => {
 });
 
 app.post("/match-predictions", async (req, res) => {
+    // return res.status(400).json({error: "Tournament has begun - Submission Denied!"});
     const body = req.body as SubmitMatchPredictionsRequest;
     if (body.name === "") return res.status(400).json({error: "Invalid Name!"});
     if (body.name.length > 100)
@@ -464,6 +471,234 @@ app.get("/leaderboard", async (req: Request, res: Response) => {
     } finally {
         client.release();
     }
+});
+
+app.get("/knockout-matches", async (_: Request, res: Response) => {
+    const result = await pool.query(`
+        SELECT
+            match_num AS "matchNum",
+            home_ref AS "homeRef",
+            away_ref AS "awayRef",
+            ARRAY[home_team_id, away_team_id] AS "teamIds",
+            winner_team_id AS "winnerId",
+            point_value AS "pointValue"
+        FROM knockout_matches
+        ORDER BY match_num
+    `);
+
+    res.json(result.rows);
+});
+
+app.post("/bracket-predictions", async (req, res) => {
+    const body = req.body as SubmitBracketPredictionsRequest;
+    if (body.name === "") return res.status(400).json({ error: "Invalid Name!" });
+    if (body.name.length > 100)
+        return res.status(400).json({ error: "Name too long!" });
+
+    const nullCount = body.predictions.filter(
+        pred => pred.winnerTeamId === null
+    ).length;
+    if (nullCount > 0) return res.status(400).json({ error: "Bracket missing entries!" });
+
+    const client = await pool.connect();
+
+    try {
+        await client.query("BEGIN");
+
+        const setResult = await client.query(`
+            INSERT INTO bracket_prediction_sets (name)
+            VALUES ($1)
+            RETURNING id
+        `, [body.name]);
+
+        const predictionSetId = setResult.rows[0].id;
+
+        const values: unknown[] = [];
+        const placeholders: string[] = [];
+
+        let i = 1;
+
+        for (const p of body.predictions) {
+            placeholders.push(
+                `($${i}, $${i + 1}, $${i + 2})`
+            );
+
+            values.push(
+                predictionSetId,
+                p.matchNum,
+                p.winnerTeamId
+            );
+
+            i += 3;
+        }
+
+        await client.query(`
+            INSERT INTO bracket_predictions (
+                prediction_set_id,
+                match_num,
+                winner_team_id
+            )
+            VALUES ${placeholders.join(",")}
+        `, values);
+
+        await client.query("COMMIT");
+
+        return res.json({
+            ok: true,
+            id: predictionSetId,
+        });
+
+    } catch (err) {
+        await client.query("ROLLBACK");
+        throw err;
+    } finally {
+        client.release();
+    }
+});
+
+app.get("/bracket-predictions/:id", async (req: Request<{ id: string }>, res) => {
+    const result = await pool.query(`
+        SELECT
+            s.name,
+            p.match_num,
+            p.winner_team_id
+        FROM bracket_prediction_sets s
+        JOIN bracket_predictions p
+            ON p.prediction_set_id = s.id
+        WHERE s.id = $1
+        ORDER BY p.match_num
+    `, [req.params.id]);
+
+    if (result.rowCount === 0) {
+        return res.status(404).json({
+            error: "Prediction not found",
+        });
+    }
+
+    res.json({
+        id: req.params.id,
+        name: result.rows[0].name,
+        predictions: result.rows.map(row => ({
+            matchNum: row.match_num,
+            winnerTeamId: row.winner_team_id,
+        })),
+    });
+});
+
+app.get("/bracket-leaderboard", async (_: Request, res: Response) => {
+    const result = await pool.query(`
+        WITH leaderboard AS (
+            SELECT
+                s.id,
+                s.name,
+                s.created_at,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN p.winner_team_id = km.winner_team_id
+                            THEN km.point_value
+                            ELSE 0
+                        END
+                    ), 0) AS points,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN km.winner_team_id IS NOT NULL
+                            THEN km.point_value
+                            ELSE 0
+                        END
+                    ), 0) AS max_points,
+                MAX(
+                    CASE
+                        WHEN p.match_num = 104
+                        THEN p.winner_team_id
+                    END
+                ) AS first_id,
+                MAX(
+                    CASE
+                        WHEN p.match_num = 103
+                        THEN p.winner_team_id
+                    END
+                ) AS third_id,
+                CASE
+                    WHEN MAX(CASE WHEN p.match_num = 104 THEN p.winner_team_id END)
+                        = MAX(CASE WHEN p.match_num = 102 THEN p.winner_team_id END)
+                        THEN
+                        MAX(CASE WHEN p.match_num = 101 THEN p.winner_team_id END)
+                    ELSE
+                        MAX(CASE WHEN p.match_num = 102 THEN p.winner_team_id END)
+                END AS second_id
+            FROM bracket_prediction_sets s
+            JOIN bracket_predictions p
+                ON p.prediction_set_id = s.id
+            JOIN knockout_matches km
+                ON km.match_num = p.match_num
+            GROUP BY
+                s.id,
+                s.name,
+                s.created_at
+        )
+        SELECT
+            RANK() OVER (
+                ORDER BY points DESC, created_at ASC
+            ) AS rank,
+
+            leaderboard.id,
+            leaderboard.name,
+            leaderboard.points,
+            leaderboard.max_points,
+
+            first.id   AS first_team_id,
+            first.name AS first_team_name,
+            first.code AS first_team_code,
+
+            second.id   AS second_team_id,
+            second.name AS second_team_name,
+            second.code AS second_team_code,
+
+            third.id   AS third_team_id,
+            third.name AS third_team_name,
+            third.code AS third_team_code
+
+        FROM leaderboard
+
+        LEFT JOIN teams first
+            ON first.id = leaderboard.first_id
+
+        LEFT JOIN teams second
+            ON second.id = leaderboard.second_id
+
+        LEFT JOIN teams third
+            ON third.id = leaderboard.third_id
+
+        ORDER BY rank;
+    `);
+
+    res.json(result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        rank: Number(row.rank),
+        points: Number(row.points),
+        maxPoints: Number(row.max_points),
+
+        first: {
+            id: row.first_team_id,
+            name: row.first_team_name,
+            code: row.first_team_code
+        },
+
+        second: {
+            id: row.second_team_id,
+            name: row.second_team_name,
+            code: row.second_team_code
+        },
+
+        third: {
+            id: row.third_team_id,
+            name: row.third_team_name,
+            code: row.third_team_code
+        }
+    })));
 });
 
 // Start Server

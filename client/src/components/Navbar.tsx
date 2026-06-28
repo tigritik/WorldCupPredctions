@@ -71,7 +71,17 @@ export default function Navbar() {
                         isActive ? "navbar__link active" : "navbar__link"
                     }
                 >
-                    Leaderboard
+                    Group Stage Leaderboard
+                </NavLink>
+
+                <NavLink
+                    to="/knockout-leaderboard"
+                    onClick={closeMenu}
+                    className={({ isActive }) =>
+                        isActive ? "navbar__link active" : "navbar__link"
+                    }
+                >
+                    Knockouts Leaderboard
                 </NavLink>
             </div>
         </nav>

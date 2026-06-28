@@ -61,9 +61,9 @@ export default function Home() {
 
                 {/* Leaderboard */}
                 <div className="home__card">
-                    <h2>Leaderboard</h2>
+                    <h2>Group Stage Leaderboard</h2>
                     <p>
-                        View all submitted predictions ranked from best to worst based on
+                        View all submitted group stage predictions ranked from best to worst based on
                         scoring accuracy.
                     </p>
 
@@ -99,6 +99,29 @@ export default function Home() {
 
                     <button onClick={() => navigate("/predict-bracket")}>
                         Go to Predict Bracket
+                    </button>
+                </div>
+
+                <div className="home__card">
+                    <h2>Knockouts Leaderboard</h2>
+                    <p>
+                        View all submitted brackets ranked from best to worst based on
+                        scoring accuracy.
+                    </p>
+
+                    <p>
+                        Scoring system:
+                        <br />• 1 point per correct winner in Ro32
+                        <br />• Point value doubles for each round
+                        <br />• (2 points Ro16, 4 points QF, etc.)
+                    </p>
+
+                    <p>
+                        Click any entry to view full the full bracket
+                    </p>
+
+                    <button onClick={() => navigate("/knockout-leaderboard")}>
+                        View Leaderboard
                     </button>
                 </div>
             </section>
